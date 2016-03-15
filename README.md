@@ -1,8 +1,8 @@
 # putio  [![Build Status](https://travis-ci.org/igungor/go-putio.svg?branch=master)](https://travis-ci.org/igungor/go-putio)
 
-[](https://godoc.org/github.com/igungor/go-putio/putio)
-
 putio is a Go client library for accessing the Put.io v2 API.
+
+[documentation](https://godoc.org/github.com/igungor/go-putio/putio)
 
 ## status
 
@@ -13,10 +13,6 @@ API is not stable yet.
 ```sh
 go get github.com/igungor/go-putio"
 ```
-
-## documentation
-
-[](https://godoc.org/github.com/igungor/go-putio/putio)
 
 ## usage
 
