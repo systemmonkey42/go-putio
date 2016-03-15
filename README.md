@@ -15,3 +15,7 @@ go get github.com/igungor/go-putio"
 ```go
 import "github.com/igungor/go-putio/putio"
 ```
+
+## stability
+
+API is not stable yet.
