@@ -3,7 +3,6 @@ package putio
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,12 +11,10 @@ import (
 )
 
 const (
-	defaultBaseURL   = "https://api.put.io"
 	defaultUserAgent = "go-putio"
 	defaultMediaType = "application/json"
+	defaultBaseURL   = "https://api.put.io"
 )
-
-var errRedirectAttempt = errors.New("redirect attempt through a redirect-prevented HTTP client")
 
 // Client manages communication with Put.io v2 API.
 type Client struct {
@@ -147,9 +144,6 @@ func (c *Client) Download(id int) (string, error) {
 	}
 
 	resp, err := c.client.Do(req)
-	if urlErr, ok := err.(*url.Error); ok && urlErr.Err == errRedirectAttempt {
-		err = nil
-	}
 	if err != nil {
 		return "", err
 	}
