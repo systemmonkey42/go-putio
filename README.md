@@ -14,6 +14,10 @@ API is not stable yet.
 go get github.com/igungor/go-putio"
 ```
 
+## documentation
+
+[](https://godoc.org/github.com/igungor/go-putio/putio)
+
 ## usage
 
 ```go
