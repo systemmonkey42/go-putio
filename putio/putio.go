@@ -7,7 +7,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -161,9 +163,34 @@ func (c *Client) Download(id int) (string, error) {
 	return downloadURL, nil
 }
 
-// createFolder creates a new folder under parent.
-func (c *Client) createFolder(name string, parent int) error {
-	panic("not implemented yet")
+// CreateFolder creates a new folder under parent.
+func (c *Client) CreateFolder(name string, parent int) error {
+	if parent < 0 {
+		return fmt.Errorf("parent id cannot be negative")
+	}
+
+	params := url.Values{}
+	params.Set("name", name)
+	params.Set("parent_id", strconv.Itoa(parent))
+
+	req, err := c.NewRequest("POST", "/v2/files/create-folder", strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("create-folder request failed. HTTP Status: %v", resp.Status)
+	}
+
+	io.Copy(os.Stdout, resp.Body)
+	return nil
 }
 
 func (c *Client) search(query string, page int) ([]File, error) {
