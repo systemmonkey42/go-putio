@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -189,7 +188,111 @@ func (c *Client) CreateFolder(name string, parent int) error {
 		return fmt.Errorf("create-folder request failed. HTTP Status: %v", resp.Status)
 	}
 
-	io.Copy(os.Stdout, resp.Body)
+	return nil
+}
+
+// Delete deletes given files.
+func (c *Client) Delete(files ...int) error {
+	if len(files) == 0 {
+		return fmt.Errorf("no file id's are given")
+	}
+
+	var ids []string
+	for _, id := range files {
+		if id < 0 {
+			return fmt.Errorf("file id cannot be negative")
+		}
+		ids = append(ids, strconv.Itoa(id))
+	}
+
+	params := url.Values{}
+	params.Set("file_ids", strings.Join(ids, ","))
+
+	req, err := c.NewRequest("POST", "/v2/files/delete", strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("delete request failed. HTTP Status: %v", resp.Status)
+	}
+
+	return nil
+}
+
+// Rename renames the file to name for the given file id.
+func (c *Client) Rename(id int, name string) error {
+	if id < 0 {
+		return fmt.Errorf("id cannot be negative")
+	}
+	if name == "" {
+		return fmt.Errorf("new filename cannot be empty")
+	}
+
+	params := url.Values{}
+	params.Set("file_id", strconv.Itoa(id))
+	params.Set("name", name)
+
+	req, err := c.NewRequest("POST", "/v2/files/rename", strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("rename request failed. HTTP Status: %v", resp.Status)
+	}
+
+	return nil
+}
+
+// Move moves files to the given destination.
+func (c *Client) Move(parent int, files ...int) error {
+	if len(files) == 0 {
+		return fmt.Errorf("no file id's are given")
+	}
+
+	var ids []string
+	for _, id := range files {
+		if id < 0 {
+			return fmt.Errorf("file id cannot be negative")
+		}
+		ids = append(ids, strconv.Itoa(id))
+	}
+
+	params := url.Values{}
+	params.Set("file_ids", strings.Join(ids, ","))
+	params.Set("parent", strconv.Itoa(parent))
+
+	req, err := c.NewRequest("POST", "/v2/files/move", strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("move request failed. HTTP Status: %v", resp.Status)
+	}
+
 	return nil
 }
 
@@ -198,33 +301,6 @@ func (c *Client) search(query string, page int) ([]File, error) {
 }
 
 func (c *Client) upload(file, filename string, parent int) error {
-	panic("not implemented yet")
-}
-
-func (c *Client) delete_(files ...int) error {
-	if len(files) == 0 {
-		return fmt.Errorf("no file id's are given")
-	}
-	panic("not implemented yet")
-}
-
-func (c *Client) rename(id int, name string) error {
-	if id < 0 {
-		return fmt.Errorf("id cannot be negative")
-	}
-	if name == "" {
-		return fmt.Errorf("new filename cannot be empty")
-	}
-	panic("not implemented yet")
-}
-
-func (c *Client) move(parent int, files ...int) error {
-	if parent < 0 {
-		return fmt.Errorf("parent id cannot be negative")
-	}
-	if len(files) == 0 {
-		return fmt.Errorf("no file id's are given")
-	}
 	panic("not implemented yet")
 }
 
