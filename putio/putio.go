@@ -17,6 +17,8 @@ const (
 	defaultBaseURL   = "https://api.put.io"
 )
 
+var errRedirect = fmt.Errorf("redirect attempt on a no-redirect client")
+
 // Client manages communication with Put.io v2 API.
 type Client struct {
 	// HTTP client used to communicate with Put.io API
@@ -144,19 +146,29 @@ func (c *Client) Download(id int) (string, error) {
 		return "", err
 	}
 
+	// don't follow redirect on this request. download-url is at the Location
+	// header, and this header exists on the first request.
+	c.client.CheckRedirect = noRedirectFunc
+	defer func() {
+		c.client.CheckRedirect = nil
+	}()
+
 	resp, err := c.client.Do(req)
+	if urlErr, ok := err.(*url.Error); ok && urlErr.Err == errRedirect {
+		err = nil
+	}
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusFound {
-		return "", fmt.Errorf("File (%v) could not be found", id)
+		return "", fmt.Errorf("file could not be found. File id: %v, Status: %v", id, resp.Status)
 	}
 
 	downloadURL := resp.Header.Get("Location")
 	if downloadURL == "" {
-		return "", fmt.Errorf("location header is empty")
+		return "", fmt.Errorf("missing download URL")
 	}
 
 	return downloadURL, nil
@@ -296,11 +308,11 @@ func (c *Client) Move(parent int, files ...int) error {
 	return nil
 }
 
-func (c *Client) search(query string, page int) ([]File, error) {
+func (c *Client) upload(file, filename string, parent int) error {
 	panic("not implemented yet")
 }
 
-func (c *Client) upload(file, filename string, parent int) error {
+func (c *Client) search(query string, page int) ([]File, error) {
 	panic("not implemented yet")
 }
 
@@ -324,4 +336,13 @@ type File struct {
 type FileList struct {
 	Files  []File `json:"file"`
 	Parent File   `json:"parent"`
+}
+
+// noRedirectFunc prevents http client to follow redirects. This is needed for
+// Put.io Download method to grab the download URL of a file.
+func noRedirectFunc(req *http.Request, via []*http.Request) error {
+	if len(via) == 0 {
+		return nil
+	}
+	return errRedirect
 }
