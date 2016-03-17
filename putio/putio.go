@@ -2,11 +2,14 @@
 package putio
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -15,6 +18,7 @@ const (
 	defaultUserAgent = "go-putio"
 	defaultMediaType = "application/json"
 	defaultBaseURL   = "https://api.put.io"
+	defaultUploadURL = "https://upload.put.io"
 )
 
 var errRedirect = fmt.Errorf("redirect attempt on a no-redirect client")
@@ -308,8 +312,64 @@ func (c *Client) Move(parent int, files ...int) error {
 	return nil
 }
 
-func (c *Client) upload(file, filename string, parent int) error {
-	panic("not implemented yet")
+// Upload reads from filepath and uploads the file contents to Put.io servers
+// under the parent directory with the name filename. This method reads the
+// file contents into the memory, so it should be used for <150MB files.
+func (c *Client) Upload(filepath, filename string, parent int) error {
+	if parent < 0 {
+		return fmt.Errorf("parent id cannot be negative")
+	}
+
+	if filename == "" {
+		return fmt.Errorf("filename cannot be empty")
+	}
+
+	f, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+
+	err = mw.WriteField("parent_id", strconv.Itoa(parent))
+	if err != nil {
+		return err
+	}
+
+	ff, err := mw.CreateFormFile("file", filename)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(ff, f)
+	if err != nil {
+		return err
+	}
+
+	err = mw.Close()
+	if err != nil {
+		return err
+	}
+
+	u, _ := url.Parse(defaultUploadURL)
+	c.BaseURL = u
+
+	req, err := c.NewRequest("POST", "/v2/files/upload", &buf)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	io.Copy(os.Stdout, resp.Body)
+	return nil
 }
 
 func (c *Client) search(query string, page int) ([]File, error) {
