@@ -139,19 +139,26 @@ func (c *Client) List(id int) (FileList, error) {
 	}, nil
 }
 
-// Download retrieves the download URL for the given file id.
-func (c *Client) Download(id int) (string, error) {
+// Download retrieves the download URL for the given file id. Callers can pass
+// additional useTunnel parameter to fetch the file from the nearest tunnel
+// server, not from the main storage servers.
+func (c *Client) Download(id int, useTunnel bool) (string, error) {
 	if id < 0 {
 		return "", fmt.Errorf("id cannot be negative")
 	}
 
-	req, err := c.NewRequest("HEAD", "/v2/files/"+strconv.Itoa(id)+"/download?notunnel=1", nil)
+	notunnel := "notunnel=1"
+	if useTunnel {
+		notunnel = "notunnel=0"
+	}
+	req, err := c.NewRequest("HEAD", "/v2/files/"+strconv.Itoa(id)+"/download?"+notunnel, nil)
 	if err != nil {
 		return "", err
 	}
 
-	// don't follow redirect on this request. download-url is at the Location
-	// header, and this header exists on the first request.
+	// our HTTP client follows redirect by default but file download URL is in
+	// the first requests Location header, and this header exists on the first
+	// request.
 	c.client.CheckRedirect = noRedirectFunc
 	defer func() {
 		c.client.CheckRedirect = nil
@@ -172,7 +179,7 @@ func (c *Client) Download(id int) (string, error) {
 
 	downloadURL := resp.Header.Get("Location")
 	if downloadURL == "" {
-		return "", fmt.Errorf("missing download URL")
+		return "", fmt.Errorf("could not retrieve download URL")
 	}
 
 	return downloadURL, nil
@@ -338,12 +345,12 @@ func (c *Client) Upload(filepath, filename string, parent int) error {
 		return err
 	}
 
-	ff, err := mw.CreateFormFile("file", filename)
+	formfile, err := mw.CreateFormFile("file", filename)
 	if err != nil {
 		return err
 	}
 
-	_, err = io.Copy(ff, f)
+	_, err = io.Copy(formfile, f)
 	if err != nil {
 		return err
 	}
@@ -368,7 +375,10 @@ func (c *Client) Upload(filepath, filename string, parent int) error {
 	}
 	defer resp.Body.Close()
 
-	io.Copy(os.Stdout, resp.Body)
+	if resp.StatusCode > 400 {
+		return fmt.Errorf("upload request failed with HTTP status: %v", resp.Status)
+	}
+
 	return nil
 }
 
