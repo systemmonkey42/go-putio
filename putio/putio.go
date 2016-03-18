@@ -51,9 +51,9 @@ func NewClient(httpClient *http.Client) (*Client, error) {
 	return c, nil
 }
 
-// NewRequest creates an API request. A relative URL can be provided via
+// newRequest creates an API request. A relative URL can be provided via
 // relURL, which will be resolved to the BaseURL of the Client.
-func (c *Client) NewRequest(method, relURL string, body io.Reader) (*http.Request, error) {
+func (c *Client) newRequest(method, relURL string, body io.Reader) (*http.Request, error) {
 	rel, err := url.Parse(relURL)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (c *Client) Get(id int) (File, error) {
 		return File{}, fmt.Errorf("id cannot be negative")
 	}
 
-	req, err := c.NewRequest("GET", "/v2/files/"+strconv.Itoa(id), nil)
+	req, err := c.newRequest("GET", "/v2/files/"+strconv.Itoa(id), nil)
 	if err != nil {
 		return File{}, err
 	}
@@ -107,7 +107,7 @@ func (c *Client) List(id int) (FileList, error) {
 	if id < 0 {
 		return FileList{}, fmt.Errorf("id cannot be negative")
 	}
-	req, err := c.NewRequest("GET", "/v2/files/list?parent_id="+strconv.Itoa(id), nil)
+	req, err := c.newRequest("GET", "/v2/files/list?parent_id="+strconv.Itoa(id), nil)
 	if err != nil {
 		return FileList{}, err
 	}
@@ -141,24 +141,31 @@ func (c *Client) List(id int) (FileList, error) {
 
 // Download retrieves the download URL for the given file id. Callers can pass
 // additional useTunnel parameter to fetch the file from the nearest tunnel
-// server, not from the main storage servers.
-func (c *Client) Download(id int, useTunnel bool) (string, error) {
+// server, not from the main storage servers. Callers must close the response
+// body. Additional request headers can be provided, such as Range headers.
+func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadCloser, error) {
 	if id < 0 {
-		return "", fmt.Errorf("id cannot be negative")
+		return nil, fmt.Errorf("id cannot be negative")
 	}
 
 	notunnel := "notunnel=1"
 	if useTunnel {
 		notunnel = "notunnel=0"
 	}
-	req, err := c.NewRequest("HEAD", "/v2/files/"+strconv.Itoa(id)+"/download?"+notunnel, nil)
+
+	req, err := c.newRequest("HEAD", "/v2/files/"+strconv.Itoa(id)+"/download?"+notunnel, nil)
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+	// merge headers with request headers
+	for header, values := range headers {
+		for _, value := range values {
+			req.Header.Add(header, value)
+		}
 	}
 
 	// our HTTP client follows redirect by default but file download URL is in
-	// the first requests Location header, and this header exists on the first
-	// request.
+	// the first requests Location header.
 	c.client.CheckRedirect = noRedirectFunc
 	defer func() {
 		c.client.CheckRedirect = nil
@@ -169,20 +176,31 @@ func (c *Client) Download(id int, useTunnel bool) (string, error) {
 		err = nil
 	}
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusFound {
-		return "", fmt.Errorf("file could not be found. File id: %v, Status: %v", id, resp.Status)
+		return nil, fmt.Errorf("file could not be found. File id: %v, Status: %v", id, resp.Status)
 	}
 
 	downloadURL := resp.Header.Get("Location")
 	if downloadURL == "" {
-		return "", fmt.Errorf("could not retrieve download URL")
+		return nil, fmt.Errorf("could not retrieve download URL")
 	}
 
-	return downloadURL, nil
+	resp, err = c.client.Get(downloadURL)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		if resp.Body != nil {
+			resp.Body.Close()
+		}
+		return nil, fmt.Errorf("unexpected HTTP status: %v", resp.Status)
+	}
+
+	return resp.Body, nil
 }
 
 // CreateFolder creates a new folder under parent.
@@ -195,7 +213,7 @@ func (c *Client) CreateFolder(name string, parent int) error {
 	params.Set("name", name)
 	params.Set("parent_id", strconv.Itoa(parent))
 
-	req, err := c.NewRequest("POST", "/v2/files/create-folder", strings.NewReader(params.Encode()))
+	req, err := c.newRequest("POST", "/v2/files/create-folder", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
@@ -231,7 +249,7 @@ func (c *Client) Delete(files ...int) error {
 	params := url.Values{}
 	params.Set("file_ids", strings.Join(ids, ","))
 
-	req, err := c.NewRequest("POST", "/v2/files/delete", strings.NewReader(params.Encode()))
+	req, err := c.newRequest("POST", "/v2/files/delete", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
@@ -263,7 +281,7 @@ func (c *Client) Rename(id int, name string) error {
 	params.Set("file_id", strconv.Itoa(id))
 	params.Set("name", name)
 
-	req, err := c.NewRequest("POST", "/v2/files/rename", strings.NewReader(params.Encode()))
+	req, err := c.newRequest("POST", "/v2/files/rename", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
@@ -300,7 +318,7 @@ func (c *Client) Move(parent int, files ...int) error {
 	params.Set("file_ids", strings.Join(ids, ","))
 	params.Set("parent", strconv.Itoa(parent))
 
-	req, err := c.NewRequest("POST", "/v2/files/move", strings.NewReader(params.Encode()))
+	req, err := c.newRequest("POST", "/v2/files/move", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
@@ -363,7 +381,7 @@ func (c *Client) Upload(filepath, filename string, parent int) error {
 	u, _ := url.Parse(defaultUploadURL)
 	c.BaseURL = u
 
-	req, err := c.NewRequest("POST", "/v2/files/upload", &buf)
+	req, err := c.newRequest("POST", "/v2/files/upload", &buf)
 	if err != nil {
 		return err
 	}
