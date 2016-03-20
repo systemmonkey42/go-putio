@@ -235,7 +235,7 @@ func (c *Client) CreateFolder(name string, parent int) error {
 // Delete deletes given files.
 func (c *Client) Delete(files ...int) error {
 	if len(files) == 0 {
-		return fmt.Errorf("no file id's are given")
+		return fmt.Errorf("no file id is given")
 	}
 
 	var ids []string
@@ -426,8 +426,8 @@ type FileList struct {
 	Parent File   `json:"parent"`
 }
 
-// noRedirectFunc prevents http client to follow redirects. This is needed for
-// Put.io Download method to grab the download URL of a file.
+// noRedirectFunc prevents HTTP client to follow redirects. This is needed for
+// Download method to grab the download URL of a file.
 func noRedirectFunc(req *http.Request, via []*http.Request) error {
 	if len(via) == 0 {
 		return nil
