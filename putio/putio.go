@@ -21,7 +21,12 @@ const (
 	defaultUploadURL = "https://upload.put.io"
 )
 
-var errRedirect = fmt.Errorf("redirect attempt on a no-redirect client")
+// errors
+var (
+	errRedirect     = fmt.Errorf("redirect attempt on a no-redirect client")
+	errFileNotFound = fmt.Errorf("file not found")
+	errNegativeID   = fmt.Errorf("file id cannot be negative")
+)
 
 // Client manages communication with Put.io v2 API.
 type Client struct {
@@ -74,7 +79,7 @@ func (c *Client) newRequest(method, relURL string, body io.Reader) (*http.Reques
 // Get fetches a single file for given file id from Put.io API.
 func (c *Client) Get(id int) (File, error) {
 	if id < 0 {
-		return File{}, fmt.Errorf("id cannot be negative")
+		return File{}, errNegativeID
 	}
 
 	req, err := c.newRequest("GET", "/v2/files/"+strconv.Itoa(id), nil)
@@ -105,7 +110,7 @@ func (c *Client) Get(id int) (File, error) {
 // List fetches a list of files for given directory id from Put.io API.
 func (c *Client) List(id int) (FileList, error) {
 	if id < 0 {
-		return FileList{}, fmt.Errorf("id cannot be negative")
+		return FileList{}, errNegativeID
 	}
 	req, err := c.newRequest("GET", "/v2/files/list?parent_id="+strconv.Itoa(id), nil)
 	if err != nil {
@@ -145,7 +150,7 @@ func (c *Client) List(id int) (FileList, error) {
 // body. Additional request headers can be provided, such as Range headers.
 func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadCloser, error) {
 	if id < 0 {
-		return nil, fmt.Errorf("id cannot be negative")
+		return nil, errNegativeID
 	}
 
 	notunnel := "notunnel=1"
@@ -181,7 +186,7 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusFound {
-		return nil, fmt.Errorf("file could not be found. File id: %v, Status: %v", id, resp.Status)
+		return nil, errFileNotFound
 	}
 
 	downloadURL := resp.Header.Get("Location")
@@ -204,9 +209,9 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 }
 
 // CreateFolder creates a new folder under parent.
-func (c *Client) CreateFolder(name string, parent int) error {
+func (c *Client) CreateFolder(name string, parent int) (File, error) {
 	if parent < 0 {
-		return fmt.Errorf("parent id cannot be negative")
+		return File{}, errNegativeID
 	}
 
 	params := url.Values{}
@@ -215,21 +220,30 @@ func (c *Client) CreateFolder(name string, parent int) error {
 
 	req, err := c.newRequest("POST", "/v2/files/create-folder", strings.NewReader(params.Encode()))
 	if err != nil {
-		return err
+		return File{}, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return err
+		return File{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("create-folder request failed. HTTP Status: %v", resp.Status)
+		return File{}, fmt.Errorf("create-folder request failed. HTTP Status: %v", resp.Status)
 	}
 
-	return nil
+	var f struct {
+		File   File   `json:"file"`
+		Status string `json:"status"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&f)
+	if err != nil {
+		return File{}, err
+	}
+
+	return f.File, nil
 }
 
 // Delete deletes given files.
@@ -241,7 +255,7 @@ func (c *Client) Delete(files ...int) error {
 	var ids []string
 	for _, id := range files {
 		if id < 0 {
-			return fmt.Errorf("file id cannot be negative")
+			return errNegativeID
 		}
 		ids = append(ids, strconv.Itoa(id))
 	}
@@ -271,7 +285,7 @@ func (c *Client) Delete(files ...int) error {
 // Rename renames the file to name for the given file id.
 func (c *Client) Rename(id int, name string) error {
 	if id < 0 {
-		return fmt.Errorf("id cannot be negative")
+		return errNegativeID
 	}
 	if name == "" {
 		return fmt.Errorf("new filename cannot be empty")
@@ -309,7 +323,7 @@ func (c *Client) Move(parent int, files ...int) error {
 	var ids []string
 	for _, id := range files {
 		if id < 0 {
-			return fmt.Errorf("file id cannot be negative")
+			return errNegativeID
 		}
 		ids = append(ids, strconv.Itoa(id))
 	}
@@ -342,7 +356,7 @@ func (c *Client) Move(parent int, files ...int) error {
 // file contents into the memory, so it should be used for <150MB files.
 func (c *Client) Upload(filepath, filename string, parent int) error {
 	if parent < 0 {
-		return fmt.Errorf("parent id cannot be negative")
+		return errNegativeID
 	}
 
 	if filename == "" {
