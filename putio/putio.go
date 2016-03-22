@@ -354,18 +354,18 @@ func (c *Client) Move(parent int, files ...int) error {
 // Upload reads from filepath and uploads the file contents to Put.io servers
 // under the parent directory with the name filename. This method reads the
 // file contents into the memory, so it should be used for <150MB files.
-func (c *Client) Upload(filepath, filename string, parent int) error {
+func (c *Client) Upload(filepath, filename string, parent int) (Upload, error) {
 	if parent < 0 {
-		return errNegativeID
+		return Upload{}, errNegativeID
 	}
 
 	if filename == "" {
-		return fmt.Errorf("filename cannot be empty")
+		return Upload{}, fmt.Errorf("filename cannot be empty")
 	}
 
 	f, err := os.Open(filepath)
 	if err != nil {
-		return err
+		return Upload{}, err
 	}
 	defer f.Close()
 
@@ -374,22 +374,22 @@ func (c *Client) Upload(filepath, filename string, parent int) error {
 
 	err = mw.WriteField("parent_id", strconv.Itoa(parent))
 	if err != nil {
-		return err
+		return Upload{}, err
 	}
 
 	formfile, err := mw.CreateFormFile("file", filename)
 	if err != nil {
-		return err
+		return Upload{}, err
 	}
 
 	_, err = io.Copy(formfile, f)
 	if err != nil {
-		return err
+		return Upload{}, err
 	}
 
 	err = mw.Close()
 	if err != nil {
-		return err
+		return Upload{}, err
 	}
 
 	u, _ := url.Parse(defaultUploadURL)
@@ -397,21 +397,30 @@ func (c *Client) Upload(filepath, filename string, parent int) error {
 
 	req, err := c.newRequest("POST", "/v2/files/upload", &buf)
 	if err != nil {
-		return err
+		return Upload{}, err
 	}
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return err
+		return Upload{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode > 400 {
-		return fmt.Errorf("upload request failed with HTTP status: %v", resp.Status)
+		return Upload{}, fmt.Errorf("upload request failed with HTTP status: %v", resp.Status)
 	}
 
-	return nil
+	var upload struct {
+		Status string `json"status"`
+		Upload
+	}
+	err = json.NewDecoder(resp.Body).Decode(&upload)
+	if err != nil {
+		return Upload{}, err
+	}
+
+	return upload.Upload, nil
 }
 
 func (c *Client) search(query string, page int) ([]File, error) {
@@ -438,6 +447,59 @@ type File struct {
 type FileList struct {
 	Files  []File `json:"file"`
 	Parent File   `json:"parent"`
+}
+
+type Upload struct {
+	File     *File     `json:"file"`
+	Transfer *Transfer `json:"transfer"`
+}
+
+type Transfer struct {
+	Availability       string `json:"availability"`
+	CallbackURL        string `json:"callback_url"`
+	CreatedAt          string `json:"created_at"`
+	CreatedTorrent     bool   `json:"created_torrent"`
+	ClienetIP          string `json:"client_ip"`
+	CurrentRatio       string `json:"current_ratio"`
+	DownloadSpeed      int    `json:"down_speed"`
+	Downloaded         int    `json:"downloaded"`
+	DownloadID         int    `json:"download_id"`
+	ErrorMessage       string `json:"error_message"`
+	EstimatedTime      string `json:"estimated_time"`
+	Extract            bool   `json:"extract"`
+	FileID             int    `json:"file_id"`
+	FinishedAt         string `json:"finished_at"`
+	ID                 int    `json:"id"`
+	IsPrivate          bool   `json:"is_private"`
+	MagnetURI          string `json:"magneturi"`
+	Name               string `json:"name"`
+	PeersConnected     int    `json:"peers_connected"`
+	PeersGettingFromUs int    `json:"peers_getting_from_us"`
+	PeersSendingToUs   int    `json:"peers_sending_to_us"`
+	PercentDone        int    `json:"percent_done"`
+	SaveParentID       int    `json:"save_parent_id"`
+	SecondsSeeding     int    `json:"seconds_seeding"`
+	Size               int    `json:"size"`
+	Source             string `json:"source"`
+	Status             string `json:"status"`
+	StatusMessage      string `json:"status_message"`
+	SubscriptionID     int    `json:"subscription_id"`
+	TorrentLink        string `json:"torrent_link"`
+	TrackerMessage     string `json:"tracker_message"`
+	Trackers           string `json:"tracker"`
+	Type               string `json:"type"`
+	UploadSpeed        int    `json:"up_speed"`
+	Uploaded           int    `json:"uploaded"`
+}
+
+// errorResponse represents a common error message that Put.io v2 API sends on
+// error.
+type errorResponse struct {
+	ErrorMessage string `json:"error_message"`
+	ErrorType    string `json:"error_type"`
+	ErrorURI     string `json:"error_uri"`
+	Status       string `json:"status"`
+	StatusCode   int    `json:"status_code"`
 }
 
 // noRedirectFunc prevents HTTP client to follow redirects. This is needed for
