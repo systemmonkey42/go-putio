@@ -76,7 +76,7 @@ func (c *Client) newRequest(method, relURL string, body io.Reader) (*http.Reques
 	return req, nil
 }
 
-// Get fetches a single file for given file id from Put.io API.
+// Get fetches file metadata for given file ID.
 func (c *Client) Get(id int) (File, error) {
 	if id < 0 {
 		return File{}, errNegativeID
@@ -107,7 +107,7 @@ func (c *Client) Get(id int) (File, error) {
 	return getResponse.File, nil
 }
 
-// List fetches a list of files for given directory id from Put.io API.
+// List fetches children for given directory ID.
 func (c *Client) List(id int) (FileList, error) {
 	if id < 0 {
 		return FileList{}, errNegativeID
@@ -144,10 +144,14 @@ func (c *Client) List(id int) (FileList, error) {
 	}, nil
 }
 
-// Download retrieves the download URL for the given file id. Callers can pass
-// additional useTunnel parameter to fetch the file from the nearest tunnel
-// server, not from the main storage servers. Callers must close the response
-// body. Additional request headers can be provided, such as Range headers.
+// Download fetches the contents of the given file. Callers can pass additional
+// useTunnel parameter to fetch the file from nearest tunnel server. Storage
+// servers accepts Range requests, so a range header can be provoded by headers
+// parameter.
+//
+// Download request is done by the client which is provided to the NewClient
+// constructor. Additional client tunings are taken into consideration while
+// downloading a file, such as Timeout etc.
 func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadCloser, error) {
 	if id < 0 {
 		return nil, errNegativeID
@@ -279,10 +283,19 @@ func (c *Client) Delete(files ...int) error {
 		return fmt.Errorf("delete request failed. HTTP Status: %v", resp.Status)
 	}
 
+	var r errorResponse
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return err
+	}
+	if r.Status != "OK" {
+		return fmt.Errorf(r.ErrorMessage)
+	}
+
 	return nil
 }
 
-// Rename renames the file to name for the given file id.
+// Rename renames the file to name for the given file ID.
 func (c *Client) Rename(id int, name string) error {
 	if id < 0 {
 		return errNegativeID
@@ -311,10 +324,19 @@ func (c *Client) Rename(id int, name string) error {
 		return fmt.Errorf("rename request failed. HTTP Status: %v", resp.Status)
 	}
 
+	var r errorResponse
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return err
+	}
+	if r.Status != "OK" {
+		return fmt.Errorf(r.ErrorMessage)
+	}
+
 	return nil
 }
 
-// Move moves files to the given destination.
+// Move moves files under the destination specified as parent ID.
 func (c *Client) Move(parent int, files ...int) error {
 	if len(files) == 0 {
 		return fmt.Errorf("no file id's are given")
@@ -348,12 +370,27 @@ func (c *Client) Move(parent int, files ...int) error {
 		return fmt.Errorf("move request failed. HTTP Status: %v", resp.Status)
 	}
 
+	var r errorResponse
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return err
+	}
+	if r.Status != "OK" {
+		return fmt.Errorf(r.ErrorMessage)
+	}
+
 	return nil
 }
 
 // Upload reads from filepath and uploads the file contents to Put.io servers
 // under the parent directory with the name filename. This method reads the
 // file contents into the memory, so it should be used for <150MB files.
+//
+// If the uploaded file is a torrent file, Put.io v2 API will interprete it as
+// a transfer and Transfer field will represent the status of the tranfer.
+
+// Likewise, if the uploaded file is a regular file, Transfer field would be
+// nil and the uploaded file will be represented by the File field.
 func (c *Client) Upload(filepath, filename string, parent int) (Upload, error) {
 	if parent < 0 {
 		return Upload{}, errNegativeID
