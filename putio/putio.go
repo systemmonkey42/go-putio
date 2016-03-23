@@ -146,7 +146,7 @@ func (c *Client) List(id int) (FileList, error) {
 
 // Download fetches the contents of the given file. Callers can pass additional
 // useTunnel parameter to fetch the file from nearest tunnel server. Storage
-// servers accepts Range requests, so a range header can be provoded by headers
+// servers accept Range requests, so a range header can be provided by headers
 // parameter.
 //
 // Download request is done by the client which is provided to the NewClient
@@ -295,18 +295,18 @@ func (c *Client) Delete(files ...int) error {
 	return nil
 }
 
-// Rename renames the file to name for the given file ID.
-func (c *Client) Rename(id int, name string) error {
+// Rename change the name of the file to newname.
+func (c *Client) Rename(id int, newname string) error {
 	if id < 0 {
 		return errNegativeID
 	}
-	if name == "" {
+	if newname == "" {
 		return fmt.Errorf("new filename cannot be empty")
 	}
 
 	params := url.Values{}
 	params.Set("file_id", strconv.Itoa(id))
-	params.Set("name", name)
+	params.Set("name", newname)
 
 	req, err := c.newRequest("POST", "/v2/files/rename", strings.NewReader(params.Encode()))
 	if err != nil {
