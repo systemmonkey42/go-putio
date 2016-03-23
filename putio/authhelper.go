@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// NewAuthHelper returns an OAuth2 enabled http client.
+// NewAuthHelper returns an OAuth2 enabled HTTP client.
 func NewAuthHelper(token string) *http.Client {
 	return oauth2.NewClient(oauth2.NoContext, tokenSource(token))
 }
