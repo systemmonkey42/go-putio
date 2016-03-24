@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -382,7 +383,7 @@ func (c *Client) Move(parent int, files ...int) error {
 	return nil
 }
 
-// Upload reads from filepath and uploads the file contents to Put.io servers
+// Upload reads from fpath and uploads the file contents to Put.io servers
 // under the parent directory with the name filename. This method reads the
 // file contents into the memory, so it should be used for <150MB files.
 //
@@ -391,16 +392,18 @@ func (c *Client) Move(parent int, files ...int) error {
 
 // Likewise, if the uploaded file is a regular file, Transfer field would be
 // nil and the uploaded file will be represented by the File field.
-func (c *Client) Upload(filepath, filename string, parent int) (Upload, error) {
+//
+// If filename is empty, basename of the fpath will be used.
+func (c *Client) Upload(fpath, filename string, parent int) (Upload, error) {
 	if parent < 0 {
 		return Upload{}, errNegativeID
 	}
 
 	if filename == "" {
-		return Upload{}, fmt.Errorf("filename cannot be empty")
+		filename = filepath.Base(fpath)
 	}
 
-	f, err := os.Open(filepath)
+	f, err := os.Open(fpath)
 	if err != nil {
 		return Upload{}, err
 	}
