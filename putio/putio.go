@@ -444,17 +444,33 @@ func (c *Client) Upload(filepath, filename string, parent int) (Upload, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode > 400 {
-		return Upload{}, fmt.Errorf("upload request failed with HTTP status: %v", resp.Status)
+	if resp.StatusCode >= 400 {
+		// decode error response
+		var errResp errorResponse
+		err := json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return Upload{}, err
+		}
+		return Upload{}, fmt.Errorf("Upload failed. %v", errResp)
 	}
 
 	var upload struct {
-		Status string `json"status"`
 		Upload
+		Status string `json"status"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&upload)
 	if err != nil {
 		return Upload{}, err
+	}
+
+	if upload.Status == "ERROR" {
+		// decode error response
+		var errResp errorResponse
+		err := json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return Upload{}, err
+		}
+		return Upload{}, fmt.Errorf("Upload failed. %v", errResp)
 	}
 
 	return upload.Upload, nil
@@ -537,6 +553,10 @@ type errorResponse struct {
 	ErrorURI     string `json:"error_uri"`
 	Status       string `json:"status"`
 	StatusCode   int    `json:"status_code"`
+}
+
+func (e errorResponse) Error() string {
+	return fmt.Sprintf("StatusCode: %v ErrorType: %v ErrorMsg: %v", e.StatusCode, e.ErrorType, e.ErrorMessage)
 }
 
 // noRedirectFunc prevents HTTP client to follow redirects. This is needed for
