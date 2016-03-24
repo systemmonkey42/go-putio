@@ -20,6 +20,7 @@ const (
 	defaultMediaType = "application/json"
 	defaultBaseURL   = "https://api.put.io"
 	defaultUploadURL = "https://upload.put.io"
+	defaultSearchURL = "https://put.io"
 )
 
 // errors
@@ -479,8 +480,43 @@ func (c *Client) Upload(fpath, filename string, parent int) (Upload, error) {
 	return upload.Upload, nil
 }
 
-func (c *Client) search(query string, page int) ([]File, error) {
-	panic("not implemented yet")
+// Search makes a search request with the given query. Servers return 50
+// results at a time. The URL for the next 50 results are in Next field.  If
+// page is negative, all results are returned.
+func (c *Client) Search(query string, page int) (Search, error) {
+	if query == "" {
+		return Search{}, fmt.Errorf("no query given")
+	}
+
+	u, _ := url.Parse(defaultSearchURL)
+	c.BaseURL = u
+
+	req, err := c.newRequest("GET", "/v2/files/search/"+query+"/page/"+strconv.Itoa(page), nil)
+	if err != nil {
+		return Search{}, err
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return Search{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errResp errorResponse
+		err = json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return Search{}, err
+		}
+		return Search{}, fmt.Errorf("search request failed. %v", errResp)
+	}
+
+	var s Search
+	err = json.NewDecoder(resp.Body).Decode(&s)
+	if err != nil {
+		return Search{}, err
+	}
+
+	return s, nil
 }
 
 // File represents a Put.io file.
@@ -508,6 +544,11 @@ type FileList struct {
 type Upload struct {
 	File     *File     `json:"file"`
 	Transfer *Transfer `json:"transfer"`
+}
+
+type Search struct {
+	Files []File `json:"files"`
+	Next  string `json:"next"`
 }
 
 type Transfer struct {
