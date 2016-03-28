@@ -58,9 +58,9 @@ func NewClient(httpClient *http.Client) (*Client, error) {
 	return c, nil
 }
 
-// newRequest creates an API request. A relative URL can be provided via
+// NewRequest creates an API request. A relative URL can be provided via
 // relURL, which will be resolved to the BaseURL of the Client.
-func (c *Client) newRequest(method, relURL string, body io.Reader) (*http.Request, error) {
+func (c *Client) NewRequest(method, relURL string, body io.Reader) (*http.Request, error) {
 	rel, err := url.Parse(relURL)
 	if err != nil {
 		return nil, err
@@ -78,13 +78,18 @@ func (c *Client) newRequest(method, relURL string, body io.Reader) (*http.Reques
 	return req, nil
 }
 
+// Do sends an API request and returns the API response.
+func (c *Client) Do(r *http.Request) (*http.Response, error) {
+	return c.client.Do(r)
+}
+
 // Get fetches file metadata for given file ID.
 func (c *Client) Get(id int) (File, error) {
 	if id < 0 {
 		return File{}, errNegativeID
 	}
 
-	req, err := c.newRequest("GET", "/v2/files/"+strconv.Itoa(id), nil)
+	req, err := c.NewRequest("GET", "/v2/files/"+strconv.Itoa(id), nil)
 	if err != nil {
 		return File{}, err
 	}
@@ -114,7 +119,7 @@ func (c *Client) List(id int) (FileList, error) {
 	if id < 0 {
 		return FileList{}, errNegativeID
 	}
-	req, err := c.newRequest("GET", "/v2/files/list?parent_id="+strconv.Itoa(id), nil)
+	req, err := c.NewRequest("GET", "/v2/files/list?parent_id="+strconv.Itoa(id), nil)
 	if err != nil {
 		return FileList{}, err
 	}
@@ -164,7 +169,7 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 		notunnel = "notunnel=0"
 	}
 
-	req, err := c.newRequest("HEAD", "/v2/files/"+strconv.Itoa(id)+"/download?"+notunnel, nil)
+	req, err := c.NewRequest("HEAD", "/v2/files/"+strconv.Itoa(id)+"/download?"+notunnel, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +229,7 @@ func (c *Client) CreateFolder(name string, parent int) (File, error) {
 	params.Set("name", name)
 	params.Set("parent_id", strconv.Itoa(parent))
 
-	req, err := c.newRequest("POST", "/v2/files/create-folder", strings.NewReader(params.Encode()))
+	req, err := c.NewRequest("POST", "/v2/files/create-folder", strings.NewReader(params.Encode()))
 	if err != nil {
 		return File{}, err
 	}
@@ -269,7 +274,7 @@ func (c *Client) Delete(files ...int) error {
 	params := url.Values{}
 	params.Set("file_ids", strings.Join(ids, ","))
 
-	req, err := c.newRequest("POST", "/v2/files/delete", strings.NewReader(params.Encode()))
+	req, err := c.NewRequest("POST", "/v2/files/delete", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
@@ -310,7 +315,7 @@ func (c *Client) Rename(id int, newname string) error {
 	params.Set("file_id", strconv.Itoa(id))
 	params.Set("name", newname)
 
-	req, err := c.newRequest("POST", "/v2/files/rename", strings.NewReader(params.Encode()))
+	req, err := c.NewRequest("POST", "/v2/files/rename", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
@@ -356,7 +361,7 @@ func (c *Client) Move(parent int, files ...int) error {
 	params.Set("file_ids", strings.Join(ids, ","))
 	params.Set("parent", strconv.Itoa(parent))
 
-	req, err := c.newRequest("POST", "/v2/files/move", strings.NewReader(params.Encode()))
+	req, err := c.NewRequest("POST", "/v2/files/move", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
@@ -436,7 +441,7 @@ func (c *Client) Upload(fpath, filename string, parent int) (Upload, error) {
 	u, _ := url.Parse(defaultUploadURL)
 	c.BaseURL = u
 
-	req, err := c.newRequest("POST", "/v2/files/upload", &buf)
+	req, err := c.NewRequest("POST", "/v2/files/upload", &buf)
 	if err != nil {
 		return Upload{}, err
 	}
@@ -491,7 +496,7 @@ func (c *Client) Search(query string, page int) (Search, error) {
 	u, _ := url.Parse(defaultSearchURL)
 	c.BaseURL = u
 
-	req, err := c.newRequest("GET", "/v2/files/search/"+query+"/page/"+strconv.Itoa(page), nil)
+	req, err := c.NewRequest("GET", "/v2/files/search/"+query+"/page/"+strconv.Itoa(page), nil)
 	if err != nil {
 		return Search{}, err
 	}
