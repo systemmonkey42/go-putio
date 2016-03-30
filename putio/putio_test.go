@@ -19,7 +19,7 @@ func setup() {
 	mux = http.NewServeMux()
 	server = httptest.NewServer(mux)
 
-	client, _ = NewClient(nil)
+	client = NewClient(nil)
 	url, _ := url.Parse(server.URL)
 	client.BaseURL = url
 }
@@ -35,7 +35,7 @@ func testMethod(t *testing.T, r *http.Request, want string) {
 }
 
 func TestNewClient(t *testing.T) {
-	client, _ = NewClient(nil)
+	client = NewClient(nil)
 	if client.BaseURL.String() != defaultBaseURL {
 		t.Errorf("got: %v, want: %v", client.BaseURL.String(), defaultBaseURL)
 	}

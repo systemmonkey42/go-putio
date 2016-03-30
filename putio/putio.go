@@ -44,7 +44,7 @@ type Client struct {
 
 // NewClient returns a new Put.io API client. It is possible to pass a custom
 // http.Client. If httpClient is not defined, default HTTP client is used.
-func NewClient(httpClient *http.Client) (*Client, error) {
+func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -55,7 +55,7 @@ func NewClient(httpClient *http.Client) (*Client, error) {
 		BaseURL:   baseURL,
 		UserAgent: defaultUserAgent,
 	}
-	return c, nil
+	return c
 }
 
 // NewRequest creates an API request. A relative URL can be provided via
