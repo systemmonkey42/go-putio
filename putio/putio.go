@@ -561,7 +561,7 @@ type Transfer struct {
 	CallbackURL        string `json:"callback_url"`
 	CreatedAt          string `json:"created_at"`
 	CreatedTorrent     bool   `json:"created_torrent"`
-	ClienetIP          string `json:"client_ip"`
+	ClientIP           string `json:"client_ip"`
 	CurrentRatio       string `json:"current_ratio"`
 	DownloadSpeed      int    `json:"down_speed"`
 	Downloaded         int    `json:"downloaded"`
