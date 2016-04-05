@@ -21,12 +21,23 @@ go get github.com/igungor/go-putio/putio"
 ```go
 package main
 
-import "github.com/igungor/go-putio/putio"
+import (
+        "fmt"
+        "log"
+
+        "golang.org/x/oauth2"
+        "github.com/igungor/go-putio/putio"
+)
 
 func main() {
-    oauthClient := putio.NewAuthHelper("YOUR-TOKEN-HERE")
+    tokenSource := oauth2.StaticTokenSource( &oauth2.Token{AccessToken: "<YOUR-TOKEN-HERE>"})
+    oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+
     client := putio.NewClient(oauthClient)
-    resp, _ := client.Get(0)
-    println(resp.Parent.Filename)
+    root, err := client.Get(0)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(root.Filename)
 }
 ```
