@@ -1,4 +1,3 @@
-// Package putio is the Put.io API v2 client for Go.
 package putio
 
 import (
@@ -42,8 +41,9 @@ type Client struct {
 	UserAgent string
 }
 
-// NewClient returns a new Put.io API client. It is possible to pass a custom
-// http.Client. If httpClient is not defined, default HTTP client is used.
+// NewClient returns a new Put.io API client, using the htttpClient, which must
+// be a new Oauth2 enabled http.Client. If httpClient is not defined, default
+// HTTP client is used.
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
