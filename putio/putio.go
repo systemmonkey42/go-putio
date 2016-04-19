@@ -169,7 +169,7 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 		notunnel = "notunnel=0"
 	}
 
-	req, err := c.NewRequest("HEAD", "/v2/files/"+strconv.Itoa(id)+"/download?"+notunnel, nil)
+	req, err := c.NewRequest("GET", "/v2/files/"+strconv.Itoa(id)+"/download?"+notunnel, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -180,36 +180,19 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 		}
 	}
 
-	// our HTTP client follows redirect by default but file download URL is in
-	// the first requests Location header.
-	c.client.CheckRedirect = noRedirectFunc
+	// follow the redirect only once. copy the original request headers to
+	// redirect request.
+	c.client.CheckRedirect = redirectOnceFunc
 	defer func() {
 		c.client.CheckRedirect = nil
 	}()
 
 	resp, err := c.client.Do(req)
-	if urlErr, ok := err.(*url.Error); ok && urlErr.Err == errRedirect {
-		err = nil
-	}
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusFound {
-		return nil, errFileNotFound
-	}
-
-	downloadURL := resp.Header.Get("Location")
-	if downloadURL == "" {
-		return nil, fmt.Errorf("could not retrieve download URL")
-	}
-
-	resp, err = c.client.Get(downloadURL)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode != http.StatusPartialContent {
 		if resp.Body != nil {
 			resp.Body.Close()
 		}
@@ -608,11 +591,22 @@ func (e errorResponse) Error() string {
 	return fmt.Sprintf("StatusCode: %v ErrorType: %v ErrorMsg: %v", e.StatusCode, e.ErrorType, e.ErrorMessage)
 }
 
-// noRedirectFunc prevents HTTP client to follow redirects. This is needed for
-// Download method to grab the download URL of a file.
-func noRedirectFunc(req *http.Request, via []*http.Request) error {
+// redirectOnceFunc follows the redirect only once, and copies the original
+// request headers to the new one.
+func redirectOnceFunc(req *http.Request, via []*http.Request) error {
 	if len(via) == 0 {
 		return nil
 	}
-	return errRedirect
+
+	if len(via) > 1 {
+		return errRedirect
+	}
+
+	// merge headers with request headers
+	for header, values := range via[0].Header {
+		for _, value := range values {
+			req.Header.Add(header, value)
+		}
+	}
+	return nil
 }
