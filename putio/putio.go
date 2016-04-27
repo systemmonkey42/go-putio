@@ -192,7 +192,7 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 		return nil, err
 	}
 
-	if resp.StatusCode != http.StatusPartialContent {
+	if resp.StatusCode >= 400 {
 		if resp.Body != nil {
 			resp.Body.Close()
 		}
