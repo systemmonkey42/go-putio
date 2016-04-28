@@ -521,6 +521,7 @@ type File struct {
 	IsMP4Available    bool   `json:"is_mp4_available"`
 	Icon              string `json:"icon"`
 	CRC32             string `json:"crc32"`
+	IsShared          bool   `json:"is_shared"`
 }
 
 // FileList represents a list of files of a Put.io directory.
