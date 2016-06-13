@@ -205,6 +205,9 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 		if resp.Body != nil {
 			resp.Body.Close()
 		}
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, ErrNotExist
+		}
 		return nil, fmt.Errorf("unexpected HTTP status: %v", resp.Status)
 	}
 
