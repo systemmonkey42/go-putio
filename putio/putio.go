@@ -24,9 +24,10 @@ const (
 
 // errors
 var (
-	errRedirect     = fmt.Errorf("redirect attempt on a no-redirect client")
-	errFileNotFound = fmt.Errorf("file not found")
-	errNegativeID   = fmt.Errorf("file id cannot be negative")
+	ErrNotExist = fmt.Errorf("file does not exist")
+
+	errRedirect   = fmt.Errorf("redirect attempt on a no-redirect client")
+	errNegativeID = fmt.Errorf("file id cannot be negative")
 )
 
 // Client manages communication with Put.io v2 API.
@@ -99,6 +100,10 @@ func (c *Client) Get(id int) (File, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNotFound {
+		return File{}, ErrNotExist
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return File{}, fmt.Errorf("get request failed with status: %v", resp.Status)
 	}
@@ -129,6 +134,10 @@ func (c *Client) List(id int) (FileList, error) {
 		return FileList{}, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return FileList{}, ErrNotExist
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return FileList{}, fmt.Errorf("list request failed. HTTP Status: %v", resp.Status)
