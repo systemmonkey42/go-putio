@@ -1,7 +1,9 @@
 package putio
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -78,5 +80,32 @@ func TestFiles_Rename(t *testing.T) {
 	err := client.Files.Rename(1, "bar")
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestFiles_Download(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fileContent := "this is the body of a file"
+	mux.HandleFunc("/v2/files/1/download", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprint(w, fileContent)
+	})
+
+	rc, err := client.Files.Download(1, false, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	defer rc.Close()
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, rc)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if buf.String() != fileContent {
+		t.Errorf("got: %q, want: %q", buf.String(), fileContent)
 	}
 }
