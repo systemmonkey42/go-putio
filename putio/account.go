@@ -21,13 +21,16 @@ func (a *AccountService) Info() (Info, error) {
 	}
 	defer resp.Body.Close()
 
-	var info Info
-	err = json.NewDecoder(resp.Body).Decode(&info)
+	var r struct {
+		Info   Info
+		Status string
+	}
+	err = json.NewDecoder(resp.Body).Decode(&r)
 	if err != nil {
 		return Info{}, err
 	}
 
-	return info, nil
+	return r.Info, nil
 }
 
 // Settings retrieves user preferences.
@@ -42,13 +45,16 @@ func (a *AccountService) Settings() (Settings, error) {
 	}
 	defer resp.Body.Close()
 
-	var settings Settings
-	err = json.NewDecoder(resp.Body).Decode(&settings)
+	var r struct {
+		Settings Settings
+		Status   string
+	}
+	err = json.NewDecoder(resp.Body).Decode(&r)
 	if err != nil {
 		return Settings{}, err
 	}
 
-	return settings, nil
+	return r.Settings, nil
 }
 
 // FIXME: fill

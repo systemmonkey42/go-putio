@@ -17,7 +17,7 @@ func TestFiles_Get(t *testing.T) {
 
 	_, err := client.Files.Get(1)
 	if err != nil {
-		t.Error("files.Get() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -32,7 +32,7 @@ func TestFiles_List(t *testing.T) {
 
 	_, err := client.Files.List(0)
 	if err != nil {
-		t.Error("files.List() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -47,7 +47,7 @@ func TestFiles_CreateFolder(t *testing.T) {
 
 	_, err := client.Files.CreateFolder("foo", 0)
 	if err != nil {
-		t.Error("files.CreateFolder() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -62,7 +62,7 @@ func TestFiles_Delete(t *testing.T) {
 
 	err := client.Files.Delete(1, 2, 3)
 	if err != nil {
-		t.Error("files.Delete() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -77,6 +77,6 @@ func TestFiles_Rename(t *testing.T) {
 
 	err := client.Files.Rename(1, "bar")
 	if err != nil {
-		t.Error("files.Rename() returned error: %v", err)
+		t.Error(err)
 	}
 }

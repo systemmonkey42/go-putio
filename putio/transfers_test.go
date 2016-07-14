@@ -17,7 +17,7 @@ func TestTransfers_List(t *testing.T) {
 
 	_, err := client.Transfers.List()
 	if err != nil {
-		t.Error("transfers.List() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -32,7 +32,7 @@ func TestTransfers_Add(t *testing.T) {
 
 	_, err := client.Transfers.Add("filepath", 0, false, "")
 	if err != nil {
-		t.Error("transfers.Add() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -47,7 +47,7 @@ func TestTransfers_Get(t *testing.T) {
 
 	_, err := client.Transfers.Get(1)
 	if err != nil {
-		t.Error("transfers.Get() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -62,7 +62,7 @@ func TestTransfers_Cancel(t *testing.T) {
 
 	err := client.Transfers.Cancel(1)
 	if err != nil {
-		t.Error("transfers.Cancel() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -77,6 +77,6 @@ func TestTransfers_Clean(t *testing.T) {
 
 	err := client.Transfers.Clean()
 	if err != nil {
-		t.Error("transfers.Clean() returned error: %v", err)
+		t.Error(err)
 	}
 }

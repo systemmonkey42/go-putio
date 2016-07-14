@@ -17,7 +17,7 @@ func TestFriends_List(t *testing.T) {
 
 	_, err := client.Friends.List()
 	if err != nil {
-		t.Error("friends.List() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -32,7 +32,7 @@ func TestFriends_WaitingRequests(t *testing.T) {
 
 	_, err := client.Friends.WaitingRequests()
 	if err != nil {
-		t.Error("friends.WaitingRequests() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -47,7 +47,7 @@ func TestFriends_Request(t *testing.T) {
 
 	err := client.Friends.Request("naber")
 	if err != nil {
-		t.Error("friends.Request() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -62,7 +62,7 @@ func TestFriends_Approve(t *testing.T) {
 
 	err := client.Friends.Approve("naber")
 	if err != nil {
-		t.Error("friends.Approve() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -77,7 +77,7 @@ func TestFriends_Deny(t *testing.T) {
 
 	err := client.Friends.Deny("naber")
 	if err != nil {
-		t.Error("friends.Deny() returned error: %v", err)
+		t.Error(err)
 	}
 }
 
@@ -92,6 +92,6 @@ func TestFriends_Unfriend(t *testing.T) {
 
 	err := client.Friends.Unfriend("naber")
 	if err != nil {
-		t.Error("friends.Unfriend() returned error: %v", err)
+		t.Error(err)
 	}
 }
