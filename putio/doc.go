@@ -7,6 +7,7 @@
 // If you have an OAuth2 access token (for example, a personal API token), you can
 // use it with the oauth2 library using:
 // 	import "golang.org/x/oauth2"
+//
 // 	func main() {
 // 		tokenSource := oauth2.StaticTokenSource(
 // 			&oauth2.Token{AccessToken: "<YOUR-TOKEN-HERE>"},
