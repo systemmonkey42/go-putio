@@ -24,7 +24,8 @@ const (
 
 // errors
 var (
-	ErrNotExist = fmt.Errorf("file does not exist")
+	ErrNotExist        = fmt.Errorf("file does not exist")
+	ErrPaymentRequired = fmt.Errorf("payment required")
 
 	errRedirect   = fmt.Errorf("redirect attempt on a no-redirect client")
 	errNegativeID = fmt.Errorf("file id cannot be negative")
@@ -207,6 +208,9 @@ func (c *Client) Download(id int, useTunnel bool, headers http.Header) (io.ReadC
 		}
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, ErrNotExist
+		}
+		if resp.StatusCode == http.StatusPaymentRequired {
+			return nil, ErrPaymentRequired
 		}
 		return nil, fmt.Errorf("unexpected HTTP status: %v", resp.Status)
 	}
