@@ -49,6 +49,12 @@ func TestFriends_Request(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	// empty username
+	err = client.Friends.Request("")
+	if err == nil {
+		t.Error("empty username accepted")
+	}
 }
 
 func TestFriends_Approve(t *testing.T) {
@@ -63,6 +69,12 @@ func TestFriends_Approve(t *testing.T) {
 	err := client.Friends.Approve("naber")
 	if err != nil {
 		t.Error(err)
+	}
+
+	// empty username
+	err = client.Friends.Approve("")
+	if err == nil {
+		t.Error("empty username accepted")
 	}
 }
 
@@ -79,6 +91,12 @@ func TestFriends_Deny(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	// empty username
+	err = client.Friends.Deny("")
+	if err == nil {
+		t.Error("empty username accepted")
+	}
 }
 
 func TestFriends_Unfriend(t *testing.T) {
@@ -93,5 +111,11 @@ func TestFriends_Unfriend(t *testing.T) {
 	err := client.Friends.Unfriend("naber")
 	if err != nil {
 		t.Error(err)
+	}
+
+	// empty username
+	err = client.Friends.Unfriend("")
+	if err == nil {
+		t.Error("empty username accepted")
 	}
 }

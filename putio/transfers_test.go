@@ -6,6 +6,74 @@ import (
 	"testing"
 )
 
+func TestTransfers_Get(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fixture := `
+	{
+	"status": "OK",
+	"transfer": {
+		"availability": null,
+		"callback_url": null,
+		"client_ip": null,
+		"created_at": "2016-07-15T09:45:15",
+		"created_torrent": false,
+		"current_ratio": 0.00,
+		"down_speed": 0,
+		"download_id": 20448117,
+		"downloaded": 0,
+		"error_message": null,
+		"estimated_time": null,
+		"extract": false,
+		"file_id": 415107363,
+		"finished_at": "2016-07-15T09:45:16",
+		"id": 1,
+		"is_private": false,
+		"magneturi": "magnet:?xt=urn:btih:4344503b7e797ebf31582327a5baae35b11bda01&dn=ubuntu-16.04-desktop-amd64.iso",
+		"name": "ubuntu-16.04-desktop-amd64.iso",
+		"peers_connected": 0,
+		"peers_getting_from_us": 0,
+		"peers_sending_to_us": 0,
+		"percent_done": 100,
+		"save_parent_id": 400004368,
+		"seconds_seeding": 0,
+		"simulated": true,
+		"size": 1485881344,
+		"source": "http://releases.ubuntu.com/16.04/ubuntu-16.04-desktop-amd64.iso.torrent",
+		"status": "COMPLETED",
+		"status_message": "Completed 4 mins ago.",
+		"subscription_id": null,
+		"torrent_link": "/v2/transfers/36003178/torrent",
+		"tracker_message": null,
+		"trackers": null,
+		"type": "TORRENT",
+		"up_speed": 0,
+		"uploaded": 0
+	}
+	}
+	`
+	mux.HandleFunc("/v2/transfers/1", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprintln(w, fixture)
+	})
+
+	transfer, err := client.Transfers.Get(1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if transfer.ID != 1 {
+		t.Errorf("got: %v, want: 1", transfer.ID)
+	}
+
+	// negative id
+	_, err = client.Transfers.Get(-1)
+	if err == nil {
+		t.Errorf("negative id accepted")
+	}
+}
+
 func TestTransfers_List(t *testing.T) {
 	setup()
 	defer teardown()
@@ -25,29 +93,74 @@ func TestTransfers_Add(t *testing.T) {
 	setup()
 	defer teardown()
 
+	fixture := `
+{
+	"status": "OK",
+	"transfer": {
+		"availability": null,
+		"callback_url": null,
+		"client_ip": null,
+		"created_at": "2016-07-15T09:45:15",
+		"created_torrent": false,
+		"current_ratio": 0.00,
+		"down_speed": 0,
+		"download_id": null,
+		"downloaded": 0,
+		"error_message": null,
+		"estimated_time": null,
+		"extract": false,
+		"file_id": null,
+		"finished_at": null,
+		"id": 3600317,
+		"is_private": false,
+		"magneturi": "magnet:?xt=urn:btih:4344503b7e797ebf31582327a5baae35b11bda01&dn=ubuntu-16.04-desktop-amd64.iso",
+		"name": "ubuntu-16.04-desktop-amd64.iso",
+		"peers_connected": 0,
+		"peers_getting_from_us": 0,
+		"peers_sending_to_us": 0,
+		"percent_done": 0,
+		"save_parent_id": 400004368,
+		"seconds_seeding": 0,
+		"simulated": false,
+		"size": 1485881344,
+		"source": "http://releases.ubuntu.com/16.04/ubuntu-16.04-desktop-amd64.iso.torrent",
+		"status": "IN_QUEUE",
+		"status_message": "In queue...",
+		"subscription_id": null,
+		"torrent_link": "/v2/transfers/36003178/torrent",
+		"tracker_message": null,
+		"trackers": null,
+		"type": "TORRENT",
+		"up_speed": 0,
+		"uploaded": 0
+	}
+}
+`
+
 	mux.HandleFunc("/v2/transfers/add", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
-		fmt.Fprintln(w, `{"status":"OK", "transfer":{"file_id": null,"name":"foo"}}`)
+		fmt.Fprintln(w, fixture)
 	})
 
-	_, err := client.Transfers.Add("filepath", 0, false, "")
+	transfer, err := client.Transfers.Add("http://releases.ubuntu.com/16.04/ubuntu-16.04-desktop-amd64.iso.torrent", 0, false, "")
 	if err != nil {
 		t.Error(err)
 	}
-}
 
-func TestTransfers_Get(t *testing.T) {
-	setup()
-	defer teardown()
+	if transfer.ID != 3600317 {
+		t.Errorf("got: %v, want: 3100317", transfer.ID)
+	}
 
-	mux.HandleFunc("/v2/transfers/1", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		fmt.Fprintln(w, `{"status":"OK", "transfers":[{"file_id": null,"name":"foo"}]}`)
-	})
+	// empty URL
+	_, err = client.Transfers.Add("", 0, false, "")
+	if err == nil {
+		t.Errorf("empty URL accepted")
+	}
 
-	_, err := client.Transfers.Get(1)
-	if err != nil {
-		t.Error(err)
+	// invalid parent id
+	_, err = client.Transfers.Add("filepath", -1, false, "")
+	if err == nil {
+		t.Errorf("invalid parent id accepted")
 	}
 }
 
@@ -63,6 +176,18 @@ func TestTransfers_Cancel(t *testing.T) {
 	err := client.Transfers.Cancel(1)
 	if err != nil {
 		t.Error(err)
+	}
+
+	// empty params
+	err = client.Transfers.Cancel()
+	if err == nil {
+		t.Errorf("no parameters given and accepted")
+	}
+
+	// negative id
+	err = client.Transfers.Cancel(1, 2, -1)
+	if err == nil {
+		t.Errorf("negative id accepted")
 	}
 }
 

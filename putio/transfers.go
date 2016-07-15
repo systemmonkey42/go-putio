@@ -119,7 +119,17 @@ func (t *TransfersService) Cancel(ids ...int) error {
 		return fmt.Errorf("no id given")
 	}
 
-	req, err := t.client.NewRequest("POST", "/v2/transfers/cancel", nil)
+	var transfers []string
+	for _, id := range ids {
+		if id < 0 {
+			return errNegativeID
+		}
+		transfers = append(transfers, strconv.Itoa(id))
+	}
+
+	params := urlpkg.Values{}
+	params.Set("transfer_ids", strings.Join(transfers, ","))
+	req, err := t.client.NewRequest("POST", "/v2/transfers/cancel", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
