@@ -13,20 +13,50 @@ func TestAccount_Info(t *testing.T) {
 	fixture := `
 {
 	"info": {
-	"username": "naber",
-        "mail": "naber@iyidir.com",
-        "plan_expiration_date": "2014-03-04T06:33:30",
-        "subtitle_languages": ["tr", "eng"],
-        "default_subtitle_language": "tr",
-        "disk": {
-            "avail": 20849243836,
-            "used": 32837847364,
-            "size": 53687091200
-        }
-    },
-    "status": "OK"
-}`
-
+		"account_active": true,
+		"avatar_url": "https://some-valid-gravatar-url.com/avatar.jpg?s=50",
+		"days_until_files_deletion": 0,
+		"default_subtitle_language": "tur",
+		"disk": {
+			"avail": 715975016136,
+			"size": 2147483648000,
+			"used": 1431508631864
+		},
+		"has_voucher": 0,
+		"mail": "naber@iyidir.com",
+		"passive_account": false,
+		"plan_expiration_date": "2020-01-01T00:00:00",
+		"settings": {
+			"callback_url": "",
+			"default_download_folder": 0,
+			"default_subtitle_language": "tur",
+			"download_folder_unset": false,
+			"is_invisible": false,
+			"nextepisode": true,
+			"private_download_host_ip": null,
+			"pushover_token": "",
+			"routing": "Istanbul",
+			"sorting": "NAME_ASC",
+			"ssl_enabled": true,
+			"start_from": true,
+			"subtitle_languages": [
+				"tur",
+				"eng"
+				],
+			"trSorting": "NAME_ASC",
+			"use_soon": true
+		},
+		"simultaneous_download_limit": 100,
+		"subtitle_languages": [
+			"tur",
+			"eng"
+		],
+		"user_id": 1,
+		"username": "naber"
+	},
+	"status": "OK"
+}
+`
 	mux.HandleFunc("/v2/account/info", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		fmt.Fprintln(w, fixture)
@@ -52,13 +82,27 @@ func TestAccount_Settings(t *testing.T) {
 
 	fixture := `
 {
-    "status": "OK",
-    "settings": {
-        "default_download_folder": 0,
-        "is_invisible": false,
-        "subtitle_languages": ["tr", "eng"],
-        "default_subtitle_language": "tr"
-    }
+	"settings": {
+		"callback_url": "",
+		"default_download_folder": 666,
+		"default_subtitle_language": "tur",
+		"download_folder_unset": false,
+		"is_invisible": false,
+		"nextepisode": true,
+		"private_download_host_ip": null,
+		"pushover_token": "",
+		"routing": "Istanbul",
+		"sorting": "NAME_ASC",
+		"ssl_enabled": true,
+		"start_from": true,
+		"subtitle_languages": [
+			"tur",
+			"eng"
+		],
+		"trSorting": "NAME_ASC",
+		"use_soon": true
+	},
+	"status": "OK"
 }
 `
 	mux.HandleFunc("/v2/account/settings", func(w http.ResponseWriter, r *http.Request) {
@@ -71,11 +115,11 @@ func TestAccount_Settings(t *testing.T) {
 		t.Error(err)
 	}
 
-	if settings.DefaultDownloadFolder != 0 {
+	if settings.DefaultDownloadFolder != 666 {
 		t.Errorf("got: %v, want: 0", settings.DefaultDownloadFolder)
 	}
 
-	if settings.DefaultSubtitleLanguage != "tr" {
+	if settings.DefaultSubtitleLanguage != "tur" {
 		t.Errorf("got: %v, want: tr", settings.DefaultSubtitleLanguage)
 	}
 }
