@@ -19,12 +19,6 @@ type File struct {
 	IsShared          bool   `json:"is_shared"`
 }
 
-// FileList represents a list of files of a Put.io directory.
-type FileList struct {
-	Files  []File `json:"file"`
-	Parent File   `json:"parent"`
-}
-
 type Upload struct {
 	File     *File     `json:"file"`
 	Transfer *Transfer `json:"transfer"`
@@ -36,41 +30,41 @@ type Search struct {
 }
 
 type Transfer struct {
-	Availability       string `json:"availability"`
-	CallbackURL        string `json:"callback_url"`
-	CreatedAt          string `json:"created_at"`
-	CreatedTorrent     bool   `json:"created_torrent"`
-	ClientIP           string `json:"client_ip"`
-	CurrentRatio       string `json:"current_ratio"`
-	DownloadSpeed      int    `json:"down_speed"`
-	Downloaded         int    `json:"downloaded"`
-	DownloadID         int    `json:"download_id"`
-	ErrorMessage       string `json:"error_message"`
-	EstimatedTime      string `json:"estimated_time"`
-	Extract            bool   `json:"extract"`
-	FileID             int    `json:"file_id"`
-	FinishedAt         string `json:"finished_at"`
-	ID                 int    `json:"id"`
-	IsPrivate          bool   `json:"is_private"`
-	MagnetURI          string `json:"magneturi"`
-	Name               string `json:"name"`
-	PeersConnected     int    `json:"peers_connected"`
-	PeersGettingFromUs int    `json:"peers_getting_from_us"`
-	PeersSendingToUs   int    `json:"peers_sending_to_us"`
-	PercentDone        int    `json:"percent_done"`
-	SaveParentID       int    `json:"save_parent_id"`
-	SecondsSeeding     int    `json:"seconds_seeding"`
-	Size               int    `json:"size"`
-	Source             string `json:"source"`
-	Status             string `json:"status"`
-	StatusMessage      string `json:"status_message"`
-	SubscriptionID     int    `json:"subscription_id"`
-	TorrentLink        string `json:"torrent_link"`
-	TrackerMessage     string `json:"tracker_message"`
-	Trackers           string `json:"tracker"`
-	Type               string `json:"type"`
-	UploadSpeed        int    `json:"up_speed"`
-	Uploaded           int    `json:"uploaded"`
+	Availability       string  `json:"availability"`
+	CallbackURL        string  `json:"callback_url"`
+	CreatedAt          string  `json:"created_at"`
+	CreatedTorrent     bool    `json:"created_torrent"`
+	ClientIP           string  `json:"client_ip"`
+	CurrentRatio       float32 `json:"current_ratio"`
+	DownloadSpeed      int     `json:"down_speed"`
+	Downloaded         int     `json:"downloaded"`
+	DownloadID         int     `json:"download_id"`
+	ErrorMessage       string  `json:"error_message"`
+	EstimatedTime      string  `json:"estimated_time"`
+	Extract            bool    `json:"extract"`
+	FileID             int     `json:"file_id"`
+	FinishedAt         string  `json:"finished_at"`
+	ID                 int     `json:"id"`
+	IsPrivate          bool    `json:"is_private"`
+	MagnetURI          string  `json:"magneturi"`
+	Name               string  `json:"name"`
+	PeersConnected     int     `json:"peers_connected"`
+	PeersGettingFromUs int     `json:"peers_getting_from_us"`
+	PeersSendingToUs   int     `json:"peers_sending_to_us"`
+	PercentDone        int     `json:"percent_done"`
+	SaveParentID       int     `json:"save_parent_id"`
+	SecondsSeeding     int     `json:"seconds_seeding"`
+	Size               int     `json:"size"`
+	Source             string  `json:"source"`
+	Status             string  `json:"status"`
+	StatusMessage      string  `json:"status_message"`
+	SubscriptionID     int     `json:"subscription_id"`
+	TorrentLink        string  `json:"torrent_link"`
+	TrackerMessage     string  `json:"tracker_message"`
+	Trackers           string  `json:"tracker"`
+	Type               string  `json:"type"`
+	UploadSpeed        int     `json:"up_speed"`
+	Uploaded           int     `json:"uploaded"`
 }
 
 type Info struct {
