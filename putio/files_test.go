@@ -104,7 +104,6 @@ func TestFiles_List(t *testing.T) {
 "status": "OK"
 }
 `
-
 	mux.HandleFunc("/v2/files/list", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		fmt.Fprintln(w, fixture)
@@ -127,14 +126,43 @@ func TestFiles_CreateFolder(t *testing.T) {
 	setup()
 	defer teardown()
 
+	fixture := `
+
+{
+	"file": {
+		"content_type": "application/x-directory",
+		"crc32": null,
+		"created_at": "2016-07-15T09:21:03",
+		"extension": null,
+		"file_type": "FOLDER",
+		"first_accessed_at": null,
+		"folder_type": "REGULAR",
+		"icon": "https://api.put.io/images/file_types/folder.png",
+		"id": 415105276,
+		"is_hidden": false,
+		"is_mp4_available": false,
+		"is_shared": false,
+		"name": "foobar",
+		"opensubtitles_hash": null,
+		"parent_id": 0,
+		"screenshot": null,
+		"size": 0
+	},
+	"status": "OK"
+}
+`
 	mux.HandleFunc("/v2/files/create-folder", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
-		fmt.Fprintln(w, `{"status":"OK", "file":{"id": 1,"name":"foo", "parent": 0}}`)
+		fmt.Fprintln(w, fixture)
 	})
 
-	_, err := client.Files.CreateFolder("foo", 0)
+	file, err := client.Files.CreateFolder("foobar", 0)
 	if err != nil {
 		t.Error(err)
+	}
+
+	if file.Filename != "foobar" {
+		t.Errorf("got: %v, want: foobar", file.Filename)
 	}
 }
 
@@ -144,7 +172,7 @@ func TestFiles_Delete(t *testing.T) {
 
 	mux.HandleFunc("/v2/files/delete", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
-		fmt.Fprintln(w, `{"status":"OK"}`)
+		fmt.Fprintln(w, `{"status": "OK"}`)
 	})
 
 	err := client.Files.Delete(1, 2, 3)
