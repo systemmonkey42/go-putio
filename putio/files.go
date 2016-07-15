@@ -57,44 +57,41 @@ func (f *FilesService) Get(id int) (File, error) {
 }
 
 // List fetches children for given directory ID.
-func (f *FilesService) List(id int) (FileList, error) {
+func (f *FilesService) List(id int) ([]File, File, error) {
 	if id < 0 {
-		return FileList{}, errNegativeID
+		return nil, File{}, errNegativeID
 	}
 	req, err := f.client.NewRequest("GET", "/v2/files/list?parent_id="+strconv.Itoa(id), nil)
 	if err != nil {
-		return FileList{}, err
+		return nil, File{}, err
 	}
 
 	resp, err := f.client.Do(req)
 	if err != nil {
-		return FileList{}, err
+		return nil, File{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return FileList{}, ErrNotExist
+		return nil, File{}, ErrNotExist
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return FileList{}, fmt.Errorf("list request failed. HTTP Status: %v", resp.Status)
+		return nil, File{}, fmt.Errorf("list request failed. HTTP Status: %v", resp.Status)
 	}
 
-	var listResponse struct {
+	var r struct {
 		Files  []File `json:"files"`
 		Parent File   `json:"parent"`
 		Status string `json:"status"`
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&listResponse)
+	err = json.NewDecoder(resp.Body).Decode(&r)
 	if err != nil {
-		return FileList{}, err
+		return nil, File{}, err
 	}
 
-	return FileList{
-		Files:  listResponse.Files,
-		Parent: listResponse.Parent,
-	}, nil
+	return r.Files, r.Parent, nil
 }
 
 // Download fetches the contents of the given file. Callers can pass additional

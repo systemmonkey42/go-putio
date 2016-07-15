@@ -12,14 +12,39 @@ func TestFiles_Get(t *testing.T) {
 	setup()
 	defer teardown()
 
+	fixture := `
+{
+	"file": {
+		"content_type": "text/plain",
+		"crc32": "66a1512f",
+		"created_at": "2013-09-07T21:32:03",
+		"first_accessed_at": null,
+		"icon": "https://put.io/images/file_types/text.png",
+		"id": 6546533,
+		"is_mp4_available": false,
+		"is_shared": false,
+		"name": "MyFile.txt",
+		"opensubtitles_hash": null,
+		"parent_id": 123,
+		"screenshot": null,
+		"size": 92
+	},
+    "status": "OK"
+}
+`
+
 	mux.HandleFunc("/v2/files/1", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprintln(w, `{"status":"OK", "file":{"id": 1,"name":"foo", "size":92}}`)
+		fmt.Fprintln(w, fixture)
 	})
 
-	_, err := client.Files.Get(1)
+	file, err := client.Files.Get(1)
 	if err != nil {
 		t.Error(err)
+	}
+
+	if file.Filesize != 92 {
+		t.Errorf("got: %v, want: 92", file.Filesize)
 	}
 }
 
@@ -27,14 +52,74 @@ func TestFiles_List(t *testing.T) {
 	setup()
 	defer teardown()
 
+	fixture := `
+{
+"files": [
+	{
+		"content_type": "text/plain",
+		"crc32": "66a1512f",
+		"created_at": "2013-09-07T21:32:03",
+		"first_accessed_at": null,
+		"icon": "https://put.io/images/file_types/text.png",
+		"id": 6546533,
+		"is_mp4_available": false,
+		"is_shared": false,
+		"name": "MyFile.txt",
+		"opensubtitles_hash": null,
+		"parent_id": 123,
+		"screenshot": null,
+		"size": 92
+	},
+	{
+		"content_type": "video/x-matroska",
+		"crc32": "cb97ba70",
+		"created_at": "2013-09-07T21:32:03",
+		"first_accessed_at": "2013-09-07T21:32:13",
+		"icon": "https://put.io/thumbnails/aF5rkZVtYV9pV1iWimSOZWJjWWFaXGZdaZBmY2OJY4uJlV5pj5FiXg%3D%3D.jpg",
+		"id": 7645645,
+		"is_mp4_available": false,
+		"is_shared": false,
+		"name": "MyVideo.mkv",
+		"opensubtitles_hash": "acc2785ffa573c69",
+		"parent_id": 123,
+		"screenshot": "https://put.io/screenshots/aF5rkZVtYV9pV1iWimSOZWJjWWFaXGZdaZBmY2OJY4uJlV5pj5FiXg%3D%3D.jpg",
+		"size": 1155197659
+	}
+],
+"parent": {
+	"content_type": "application/x-directory",
+	"crc32": null,
+	"created_at": "2013-09-07T21:32:03",
+	"first_accessed_at": null,
+	"icon": "https://put.io/images/file_types/folder.png",
+	"id": 123,
+	"is_mp4_available": false,
+	"is_shared": false,
+	"name": "MyFolder",
+	"opensubtitles_hash": null,
+	"parent_id": 0,
+	"screenshot": null,
+	"size": 1155197751
+},
+"status": "OK"
+}
+`
+
 	mux.HandleFunc("/v2/files/list", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprintln(w, `{"status":"OK", "files":[{"id": 1,"name":"foo", "size":92}]}`)
+		fmt.Fprintln(w, fixture)
 	})
 
-	_, err := client.Files.List(0)
+	files, parent, err := client.Files.List(0)
 	if err != nil {
 		t.Error(err)
+	}
+
+	if len(files) != 2 {
+		t.Errorf("got: %v, want: 2", len(files))
+	}
+	if parent.ID != 123 {
+		t.Errorf("got: %v, want: 123", parent.ID)
 	}
 }
 
