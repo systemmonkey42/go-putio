@@ -12,7 +12,6 @@ const (
 	defaultMediaType = "application/json"
 	defaultBaseURL   = "https://api.put.io"
 	defaultUploadURL = "https://upload.put.io"
-	defaultSearchURL = "https://put.io"
 )
 
 // errors

@@ -211,6 +211,11 @@ func TestFiles_Delete(t *testing.T) {
 	if err == nil {
 		t.Errorf("empty parameters accepted")
 	}
+
+	err = client.Files.Delete(1, 2, -1)
+	if err == nil {
+		t.Errorf("negative id accepted")
+	}
 }
 
 func TestFiles_Rename(t *testing.T) {
@@ -291,5 +296,110 @@ func TestFiles_Download(t *testing.T) {
 	response := buf.String()
 	if response != "0123" {
 		t.Errorf("got: %v, want: 0123", response)
+	}
+}
+
+func TestFiles_Search(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fixture := `
+{
+"files": [
+	{
+		"content_type": "video/x-msvideo",
+		"crc32": "812ed74d",
+		"created_at": "2013-04-30T21:40:04",
+		"extension": "avi",
+		"file_type": "VIDEO",
+		"first_accessed_at": "2013-12-24T09:18:58",
+		"folder_type": "REGULAR",
+		"icon": "https://some-valid-screenhost-url.com",
+		"id": 79905833,
+		"is_hidden": false,
+		"is_mp4_available": true,
+		"is_shared": false,
+		"name": "some-file.mkv",
+		"opensubtitles_hash": "fb5414fd9b9e1e38",
+		"parent_id": 79905827,
+		"screenshot": "https://some-valid-screenhost-url.com",
+		"sender_name": "hafifuyku",
+		"size": 738705408,
+		"start_from": 0
+	},
+	{
+		"content_type": "application/x-directory",
+		"crc32": null,
+		"created_at": "2013-04-30T21:40:03",
+		"extension": null,
+		"file_type": "FOLDER",
+		"first_accessed_at": null,
+		"folder_type": "REGULAR",
+		"icon": "https://some-valid-screenhost-url.com",
+		"id": 79905827,
+		"is_hidden": false,
+		"is_mp4_available": false,
+		"is_shared": false,
+		"name": "Movie 43",
+		"opensubtitles_hash": null,
+		"parent_id": 2197,
+		"screenshot": null,
+		"sender_name": "hafifuyku",
+		"size": 738831202
+	},
+	{
+		"content_type": "application/x-directory",
+		"crc32": null,
+		"created_at": "2010-05-19T22:24:21",
+		"extension": null,
+		"file_type": "FOLDER",
+		"first_accessed_at": null,
+		"folder_type": "REGULAR",
+		"icon": "https://some-valid-screenhost-url.com",
+		"id": 5659875,
+		"is_hidden": false,
+		"is_mp4_available": false,
+		"is_shared": false,
+		"name": "MOVIE",
+		"opensubtitles_hash": null,
+		"parent_id": 0,
+		"screenshot": null,
+		"sender_name": "emsel",
+		"size": 0
+	}
+],
+"next": null,
+"status": "OK",
+"total": 3
+}
+`
+	mux.HandleFunc("/v2/files/search/", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprintln(w, fixture)
+	})
+
+	s, err := client.Files.Search("naber", 1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(s.Files) != 3 {
+		t.Errorf("got: %v, want: 3", len(s.Files))
+	}
+
+	if s.Files[0].Filename != "some-file.mkv" {
+		t.Errorf("got: %v, want: some-file.mkv", s.Files[0].Filename)
+	}
+
+	// invalid page number
+	_, err = client.Files.Search("naber", 0)
+	if err == nil {
+		t.Errorf("invalid page number accepted")
+	}
+
+	// empty query
+	_, err = client.Files.Search("", 1)
+	if err == nil {
+		t.Errorf("empty query accepted")
 	}
 }

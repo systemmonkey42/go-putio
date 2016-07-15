@@ -379,13 +379,12 @@ func (f *FilesService) Upload(fpath, filename string, parent int) (Upload, error
 // results at a time. The URL for the next 50 results are in Next field.  If
 // page is negative, all results are returned.
 func (f *FilesService) Search(query string, page int) (Search, error) {
+	if page <= 0 {
+		return Search{}, fmt.Errorf("invalid page number")
+	}
 	if query == "" {
 		return Search{}, fmt.Errorf("no query given")
 	}
-
-	u, _ := url.Parse(defaultSearchURL)
-	// FIXME: revert to original baseurl
-	f.client.BaseURL = u
 
 	req, err := f.client.NewRequest("GET", "/v2/files/search/"+query+"/page/"+strconv.Itoa(page), nil)
 	if err != nil {
