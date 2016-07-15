@@ -6,39 +6,6 @@ import (
 	"testing"
 )
 
-func TestZips_List(t *testing.T) {
-	setup()
-	defer teardown()
-
-	mux.HandleFunc("/v2/zips/list", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		fmt.Fprintln(w, `{"status":"OK", "zips":[{"id": null,"created_at":"NULL"}]}`)
-	})
-
-	_, err := client.Zips.List()
-	if err != nil {
-		t.Error("zips.List() returned error: %v", err)
-	}
-}
-
-func TestZips_Create(t *testing.T) {
-	setup()
-	defer teardown()
-
-	mux.HandleFunc("/v2/zips/create", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "POST")
-		fmt.Fprintln(w, `{"status":"OK", "zip_id": "1"}`)
-	})
-
-	id, err := client.Zips.Create(666)
-	if err != nil {
-		t.Error("zips.Create() returned error: %v", err)
-	}
-	if id != 1 {
-		t.Errorf("got: %v, want 1", id)
-	}
-}
-
 func TestZips_Get(t *testing.T) {
 	setup()
 	defer teardown()
@@ -50,6 +17,65 @@ func TestZips_Get(t *testing.T) {
 
 	_, err := client.Zips.Get(1)
 	if err != nil {
-		t.Error("zips.Get() returned error: %v", err)
+		t.Error(err)
+	}
+}
+
+func TestZips_List(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fixture := `
+{
+	"status": "OK",
+	"zips": [
+		{
+			"created_at": "2016-07-15T10:42:12",
+			"id": 4177262
+		}
+	]
+}
+`
+	mux.HandleFunc("/v2/zips/list", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprintln(w, fixture)
+	})
+
+	zips, err := client.Zips.List()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(zips) != 1 {
+		t.Errorf("got: %v, want: 1", len(zips))
+	}
+
+	if zips[0].ID != 4177262 {
+		t.Errorf("got: %v, want: 4177262", zips[0].ID)
+	}
+}
+
+func TestZips_Create(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fixture := `
+{
+	"status": "OK",
+	"zip_id": 4177264
+}
+`
+	mux.HandleFunc("/v2/zips/create", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		fmt.Fprintln(w, fixture)
+	})
+
+	id, err := client.Zips.Create(666)
+	if err != nil {
+		t.Error("zips.Create() returned error: %v", err)
+	}
+
+	if id != 4177264 {
+		t.Errorf("got: %v, want 4177264", id)
 	}
 }
