@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestFiles_Get(t *testing.T) {
@@ -45,6 +47,12 @@ func TestFiles_Get(t *testing.T) {
 
 	if file.Filesize != 92 {
 		t.Errorf("got: %v, want: 92", file.Filesize)
+	}
+
+	// negative id
+	_, err = client.Files.Get(-1)
+	if err == nil {
+		t.Errorf("negative id accepted")
 	}
 }
 
@@ -120,6 +128,12 @@ func TestFiles_List(t *testing.T) {
 	if parent.ID != 123 {
 		t.Errorf("got: %v, want: 123", parent.ID)
 	}
+
+	// negative id
+	_, _, err = client.Files.List(-1)
+	if err == nil {
+		t.Errorf("negative id accepted")
+	}
 }
 
 func TestFiles_CreateFolder(t *testing.T) {
@@ -164,6 +178,18 @@ func TestFiles_CreateFolder(t *testing.T) {
 	if file.Filename != "foobar" {
 		t.Errorf("got: %v, want: foobar", file.Filename)
 	}
+
+	// empty folder name
+	_, err = client.Files.CreateFolder("", 0)
+	if err == nil {
+		t.Errorf("empty folder name accepted")
+	}
+
+	// negative id
+	_, err = client.Files.CreateFolder("foobar", -1)
+	if err == nil {
+		t.Errorf("negative id accepted")
+	}
 }
 
 func TestFiles_Delete(t *testing.T) {
@@ -178,6 +204,12 @@ func TestFiles_Delete(t *testing.T) {
 	err := client.Files.Delete(1, 2, 3)
 	if err != nil {
 		t.Error(err)
+	}
+
+	// empty params
+	err = client.Files.Delete()
+	if err == nil {
+		t.Errorf("empty parameters accepted")
 	}
 }
 
@@ -194,16 +226,29 @@ func TestFiles_Rename(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	// negative id
+	err = client.Files.Rename(-1, "bar")
+	if err == nil {
+		t.Errorf("negative file ID accepted")
+	}
+
+	// empty name
+	err = client.Files.Rename(1, "")
+	if err == nil {
+		t.Errorf("empty filename accepted")
+	}
 }
 
 func TestFiles_Download(t *testing.T) {
 	setup()
 	defer teardown()
 
-	fileContent := "this is the body of a file"
+	fileContent := "0123456789"
 	mux.HandleFunc("/v2/files/1/download", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprint(w, fileContent)
+		buf := strings.NewReader(fileContent)
+		http.ServeContent(w, r, "testfile", time.Now().UTC(), buf)
 	})
 
 	rc, err := client.Files.Download(1, false, nil)
@@ -220,5 +265,31 @@ func TestFiles_Download(t *testing.T) {
 
 	if buf.String() != fileContent {
 		t.Errorf("got: %q, want: %q", buf.String(), fileContent)
+	}
+
+	// negative id
+	_, err = client.Files.Download(-1, false, nil)
+	if err == nil {
+		t.Errorf("negative id accepted")
+	}
+
+	// range request
+	rangeHeader := http.Header{}
+	rangeHeader.Set("Range", fmt.Sprintf("bytes=%v-%v", 0, 3))
+	rc, err = client.Files.Download(1, false, rangeHeader)
+	if err != nil {
+		t.Error(err)
+	}
+	defer rc.Close()
+
+	buf.Reset()
+	_, err = io.Copy(&buf, rc)
+	if err != nil {
+		t.Error(err)
+	}
+
+	response := buf.String()
+	if response != "0123" {
+		t.Errorf("got: %v, want: 0123", response)
 	}
 }

@@ -10,14 +10,32 @@ func TestZips_Get(t *testing.T) {
 	setup()
 	defer teardown()
 
+	fixture := `
+{
+	"missing_files": [],
+	"size": 27039611973,
+	"status": "OK",
+	"url": "https://some-valid-storage-url.com/12345"
+}
+`
 	mux.HandleFunc("/v2/zips/1", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprintln(w, `{"status":"OK", "size": 123456, "url": "https://put.io"}`)
+		fmt.Fprintln(w, fixture)
 	})
 
-	_, err := client.Zips.Get(1)
+	zip, err := client.Zips.Get(1)
 	if err != nil {
 		t.Error(err)
+	}
+
+	if zip.URL != "https://some-valid-storage-url.com/12345" {
+		t.Errorf("got: %v, want: https://some-valid-storage-url.com/12345", zip.URL)
+	}
+
+	// negative id
+	_, err = client.Zips.Get(-1)
+	if err == nil {
+		t.Errorf("negative id accepted")
 	}
 }
 
@@ -77,5 +95,16 @@ func TestZips_Create(t *testing.T) {
 
 	if id != 4177264 {
 		t.Errorf("got: %v, want 4177264", id)
+	}
+
+	// negative id
+	_, err = client.Zips.Create(1, 2, -1)
+	if err == nil {
+		t.Errorf("negative id accepted")
+	}
+
+	_, err = client.Zips.Create()
+	if err == nil {
+		t.Errorf("empty params accepted")
 	}
 }

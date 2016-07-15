@@ -153,6 +153,10 @@ func (f *FilesService) Download(id int, useTunnel bool, headers http.Header) (io
 
 // CreateFolder creates a new folder under parent.
 func (f *FilesService) CreateFolder(name string, parent int) (File, error) {
+	if name == "" {
+		return File{}, fmt.Errorf("empty folder name")
+	}
+
 	if parent < 0 {
 		return File{}, errNegativeID
 	}
