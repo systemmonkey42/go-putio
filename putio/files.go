@@ -539,7 +539,7 @@ func (f *FilesService) share(files []int, friends ...string) error {
 }
 
 // Shared returns list of shared files and share information.
-func (f *FilesService) shared() ([]Share, error) {
+func (f *FilesService) shared() ([]share, error) {
 	req, err := f.client.NewRequest("GET", "/v2/files/shared", nil)
 	if err != nil {
 		return nil, err
@@ -552,7 +552,7 @@ func (f *FilesService) shared() ([]Share, error) {
 	defer resp.Body.Close()
 
 	var r struct {
-		Shared []Share
+		Shared []share
 		Status string
 	}
 	err = json.NewDecoder(resp.Body).Decode(&r)
@@ -563,7 +563,7 @@ func (f *FilesService) shared() ([]Share, error) {
 }
 
 // SharedWith returns list of users the given file is shared with.
-func (f *FilesService) sharedWith(id int) ([]Share, error) {
+func (f *FilesService) sharedWith(id int) ([]share, error) {
 	if id < 0 {
 		return nil, errNegativeID
 	}
@@ -583,7 +583,7 @@ func (f *FilesService) sharedWith(id int) ([]Share, error) {
 	defer resp.Body.Close()
 
 	var r struct {
-		Shared []Share `json:"shared-with"`
+		Shared []share `json:"shared-with"`
 		Status string
 	}
 	err = json.NewDecoder(resp.Body).Decode(&r)

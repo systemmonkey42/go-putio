@@ -137,7 +137,7 @@ type Event struct {
 	CreatedAt    string `json:"created_at"`
 }
 
-type Share struct {
+type share struct {
 	FileID   int    `json:"file_id"`
 	Filename string `json:"file_name"`
 	// Number of friends the file is shared with
