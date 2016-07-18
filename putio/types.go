@@ -137,6 +137,13 @@ type Event struct {
 	CreatedAt    string `json:"created_at"`
 }
 
+type Share struct {
+	FileID   int    `json:"file_id"`
+	Filename string `json:"file_name"`
+	// Number of friends the file is shared with
+	SharedWith int `json:"shared_with"`
+}
+
 // errorResponse represents a common error message that Put.io v2 API sends on
 // error.
 type errorResponse struct {

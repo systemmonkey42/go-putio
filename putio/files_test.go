@@ -248,6 +248,41 @@ func TestFiles_Rename(t *testing.T) {
 	}
 }
 
+func TestFiles_Move(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v2/files/move", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
+		fmt.Fprintln(w, `{"status":"OK"}`)
+	})
+
+	// move 1, 2, 3, 4 and 5 to root directory (0).
+	err := client.Files.Move(0, 1, 2, 3, 4, 5)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// negative parent id
+	err = client.Files.Move(-1, 1, 2, 3, 4, 5)
+	if err == nil {
+		t.Errorf("negative parent ID accepted")
+	}
+
+	// negative file id
+	err = client.Files.Move(0, 1, 2, -3)
+	if err == nil {
+		t.Errorf("negative file ID accepted")
+	}
+
+	// no files
+	err = client.Files.Move(0)
+	if err == nil {
+		t.Errorf("no files given and it is accepted")
+	}
+}
+
 func TestFiles_Download(t *testing.T) {
 	setup()
 	defer teardown()
@@ -454,5 +489,170 @@ func TestFiles_DeleteVideoPosition(t *testing.T) {
 	err = client.Files.DeleteVideoPosition(-1)
 	if err == nil {
 		t.Errorf("negative file id accepted")
+	}
+}
+
+func TestFiles_HLSPlaylist(t *testing.T) {
+	setup()
+	defer teardown()
+
+	sampleHLS := `
+#EXTM3U
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=688301
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/0640_vod.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=165135
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/0150_vod.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=262346
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/0240_vod.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=481677
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/0440_vod.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=1308077
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/1240_vod.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=1927853
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/1840_vod.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=2650941
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/2540_vod.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1, BANDWIDTH=3477293
+http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/3340_vod.m3u8
+`
+	mux.HandleFunc("/v2/files/1/hls/media.m3u8", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		http.ServeContent(w, r, "media.m3u8", time.Now().UTC(), strings.NewReader(sampleHLS))
+	})
+
+	body, err := client.Files.HLSPlaylist(1, "all")
+	if err != nil {
+		t.Error(err)
+	}
+	defer body.Close()
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, body)
+	if err != nil {
+		t.Error(err)
+	}
+	if buf.String() != sampleHLS {
+		t.Errorf("got: %v, want: %v", buf.String(), sampleHLS)
+	}
+
+	// negative id
+	_, err = client.Files.HLSPlaylist(-1, "all")
+	if err == nil {
+		t.Errorf("negative file ID accepted")
+	}
+
+	// empty key
+	_, err = client.Files.HLSPlaylist(1, "")
+	if err == nil {
+		t.Errorf("empty key is accepted")
+	}
+}
+
+func TestFiles_Share(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v2/files/share", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
+		fmt.Fprintln(w, `{"status":"OK"}`)
+	})
+
+	err := client.Files.share([]int{1, 2, 3}, "friend0", "friend1", "friend2")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// negative file id
+	err = client.Files.share([]int{-1, 1, 2}, "friend0")
+	if err == nil {
+		t.Errorf("negative file id accepted")
+	}
+
+	// no file id given
+	err = client.Files.share([]int{}, "friend0")
+	if err == nil {
+		t.Errorf("no files given and accepted")
+	}
+
+	// case: everyone (given no friends share the files to every friend)
+	err = client.Files.share([]int{1})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestFiles_Shared(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fixture := `
+{
+	"shared": [
+    {
+		"file_id": 388029022,
+		"file_name": "cowboy",
+		"shared_with": 1
+    },
+    {
+		"file_id": 388029023,
+		"file_name": "bebop",
+		"shared_with": 1
+    }
+  ],
+  "status": "OK"
+}
+`
+	mux.HandleFunc("/v2/files/shared", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprintln(w, fixture)
+	})
+
+	files, err := client.Files.shared()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(files) != 2 {
+		t.Errorf("got: %v, want: %v", len(files), 2)
+	}
+
+	if files[0].FileID != 388029022 {
+		t.Errorf("got: %v, want: %v", files[0].FileID, 388029022)
+	}
+}
+
+func TestFiles_SharedWith(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fixture := `
+{
+	"shared-with": [
+    {
+		"share_id": 1,
+		"user_avatar_url": "https://some-valid-avatar-url.com/avatar.jpg",
+		"user_name": "spike"
+    },
+    {
+		"share_id": 2,
+		"user_avatar_url": "https://some-valid-avatar-url.com/avatar2.jpg",
+		"user_name": "edward"
+    }
+  ],
+  "status": "OK"
+}
+`
+
+	mux.HandleFunc("/v2/files/1/shared-with", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprintln(w, fixture)
+	})
+
+	files, err := client.Files.sharedWith(1)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(files) != 2 {
+		t.Errorf("got: %v, want: %v", len(files), 2)
 	}
 }

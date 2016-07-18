@@ -279,6 +279,55 @@ func (f *FilesService) Rename(id int, newname string) error {
 	return nil
 }
 
+// Move moves files to the given destination.
+func (f *FilesService) Move(parent int, files ...int) error {
+	if parent < 0 {
+		return errNegativeID
+	}
+
+	if len(files) == 0 {
+		return fmt.Errorf("no files given")
+	}
+
+	var ids []string
+	for _, file := range files {
+		if file < 0 {
+			return errNegativeID
+		}
+		ids = append(ids, strconv.Itoa(file))
+	}
+
+	params := url.Values{}
+	params.Set("file_ids", strings.Join(ids, ","))
+	params.Set("parent_id", strconv.Itoa(parent))
+	req, err := f.client.NewRequest("POST", "/v2/files/move", strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("move request failed. HTTP Status: %v", resp.Status)
+	}
+
+	var r errorResponse
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return err
+	}
+	if r.Status != "OK" {
+		return fmt.Errorf(r.ErrorMessage)
+	}
+
+	return nil
+}
+
 // Upload reads from fpath and uploads the file contents to Put.io servers
 // under the parent directory with the name filename. This method reads the
 // file contents into the memory, so it should be used for <150MB files.
@@ -444,6 +493,105 @@ func (f *FilesService) convert(id int) error {
 		return fmt.Errorf("err")
 	}
 	return nil
+}
+
+// Share shares given files with given friends. Friends are list of usernames.
+// If no friends is given, files are shared with all of your friends.
+func (f *FilesService) share(files []int, friends ...string) error {
+	if len(files) == 0 {
+		return fmt.Errorf("no files given")
+	}
+
+	var ids []string
+	for _, file := range files {
+		if file < 0 {
+			return errNegativeID
+		}
+		ids = append(ids, strconv.Itoa(file))
+	}
+
+	var friendsParam string
+	if len(friends) == 0 {
+		friendsParam = "everyone"
+	} else {
+		friendsParam = strings.Join(friends, ",")
+	}
+
+	params := url.Values{}
+	params.Set("file_ids", strings.Join(ids, ","))
+	params.Set("friends", friendsParam)
+	req, err := f.client.NewRequest("POST", "/v2/files/share", strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Status string
+	}
+	return json.NewDecoder(resp.Body).Decode(&r)
+}
+
+// Shared returns list of shared files and share information.
+func (f *FilesService) shared() ([]Share, error) {
+	req, err := f.client.NewRequest("GET", "/v2/files/shared", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Shared []Share
+		Status string
+	}
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return nil, err
+	}
+	return r.Shared, nil
+}
+
+// SharedWith returns list of users the given file is shared with.
+func (f *FilesService) sharedWith(id int) ([]Share, error) {
+	if id < 0 {
+		return nil, errNegativeID
+	}
+
+	// FIXME: shared-with returns different json structure than /shared/
+	// endpoint. so it's not an exported method until a common structure is
+	// decided
+	req, err := f.client.NewRequest("GET", "/v2/files/"+strconv.Itoa(id)+"/shared-with", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Shared []Share `json:"shared-with"`
+		Status string
+	}
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Shared, nil
 }
 
 // Subtitles lists available subtitles for the given file for user's prefered
