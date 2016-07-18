@@ -85,6 +85,7 @@ func TestZips_Create(t *testing.T) {
 `
 	mux.HandleFunc("/v2/zips/create", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, fixture)
 	})
 

@@ -36,6 +36,7 @@ func (e *EventsService) Delete() error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := e.client.Do(req)
 	if err != nil {

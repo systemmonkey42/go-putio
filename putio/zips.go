@@ -87,6 +87,7 @@ func (z *ZipsService) Create(fileIDs ...int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := z.client.Do(req)
 	if err != nil {

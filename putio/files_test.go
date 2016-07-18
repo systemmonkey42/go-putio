@@ -167,6 +167,7 @@ func TestFiles_CreateFolder(t *testing.T) {
 `
 	mux.HandleFunc("/v2/files/create-folder", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, fixture)
 	})
 
@@ -198,6 +199,7 @@ func TestFiles_Delete(t *testing.T) {
 
 	mux.HandleFunc("/v2/files/delete", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, `{"status": "OK"}`)
 	})
 
@@ -224,6 +226,7 @@ func TestFiles_Rename(t *testing.T) {
 
 	mux.HandleFunc("/v2/files/rename", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 

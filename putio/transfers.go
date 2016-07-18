@@ -136,6 +136,7 @@ func (t *TransfersService) Cancel(ids ...int) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := t.client.Do(req)
 	if err != nil {
@@ -164,6 +165,7 @@ func (t *TransfersService) Clean() error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := t.client.Do(req)
 	if err != nil {

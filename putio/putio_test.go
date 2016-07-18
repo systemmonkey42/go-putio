@@ -32,6 +32,12 @@ func testMethod(t *testing.T, r *http.Request, want string) {
 	}
 }
 
+func testHeader(t *testing.T, r *http.Request, key, value string) {
+	if r.Header.Get(key) != value {
+		t.Errorf("missing header. want: %q: %q", key, value)
+	}
+}
+
 func TestNewClient(t *testing.T) {
 	client = NewClient(nil)
 	if client.BaseURL.String() != defaultBaseURL {

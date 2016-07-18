@@ -58,6 +58,7 @@ func TestEvents_Delete(t *testing.T) {
 
 	mux.HandleFunc("/v2/events/delete", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 

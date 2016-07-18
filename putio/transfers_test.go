@@ -210,6 +210,7 @@ func TestTransfers_Add(t *testing.T) {
 
 	mux.HandleFunc("/v2/transfers/add", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, fixture)
 	})
 
@@ -241,6 +242,7 @@ func TestTransfers_Cancel(t *testing.T) {
 
 	mux.HandleFunc("/v2/transfers/cancel", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
@@ -268,6 +270,7 @@ func TestTransfers_Clean(t *testing.T) {
 
 	mux.HandleFunc("/v2/transfers/clean", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 

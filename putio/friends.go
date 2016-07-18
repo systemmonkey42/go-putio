@@ -68,6 +68,8 @@ func (f *FriendsService) Request(username string) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 	resp, err := f.client.Do(req)
 	if err != nil {
 		return err
@@ -91,6 +93,8 @@ func (f *FriendsService) Approve(username string) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 	resp, err := f.client.Do(req)
 	if err != nil {
 		return err
@@ -114,6 +118,8 @@ func (f *FriendsService) Deny(username string) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 	resp, err := f.client.Do(req)
 	if err != nil {
 		return err
@@ -137,6 +143,8 @@ func (f *FriendsService) Unfriend(username string) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 	resp, err := f.client.Do(req)
 	if err != nil {
 		return err
