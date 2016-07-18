@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // FilesServices is a general service to gather information about user files,
@@ -532,17 +531,22 @@ func (f *FilesService) HLSPlaylist(id int, subtitleKey string) (io.ReadCloser, e
 }
 
 // SetVideoPosition sets default video position for a video file.
-func (f *FilesService) SetVideoPosition(id int, t time.Time) error {
+func (f *FilesService) SetVideoPosition(id int, t int) error {
 	if id < 0 {
 		return errNegativeID
 	}
 
+	if t < 0 {
+		return fmt.Errorf("time cannot be negative")
+	}
+
 	params := url.Values{}
-	params.Set("time", strconv.Itoa(t.Second()))
+	params.Set("time", strconv.Itoa(t))
 	req, err := f.client.NewRequest("POST", "/v2/files/"+strconv.Itoa(id)+"/start-from", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := f.client.Do(req)
 	if err != nil {
@@ -564,10 +568,11 @@ func (f *FilesService) DeleteVideoPosition(id int) error {
 		return errNegativeID
 	}
 
-	req, err := f.client.NewRequest("POST", "/v2/files/"+strconv.Itoa(id)+"/start-from", nil)
+	req, err := f.client.NewRequest("POST", "/v2/files/"+strconv.Itoa(id)+"/start-from/delete", nil)
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := f.client.Do(req)
 	if err != nil {

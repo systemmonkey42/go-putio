@@ -406,3 +406,53 @@ func TestFiles_Search(t *testing.T) {
 		t.Errorf("empty query accepted")
 	}
 }
+
+func TestFiles_SetVideoPosition(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v2/files/1/start-from", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
+		fmt.Fprintln(w, `{"statutus":"OK"}`)
+	})
+
+	err := client.Files.SetVideoPosition(1, 10)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// negative id
+	err = client.Files.SetVideoPosition(-1, 10)
+	if err == nil {
+		t.Errorf("negative file id accepted")
+	}
+
+	// negative time
+	err = client.Files.SetVideoPosition(1, -1)
+	if err == nil {
+		t.Errorf("negative time accepted")
+	}
+}
+
+func TestFiles_DeleteVideoPosition(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v2/files/1/start-from/delete", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
+		fmt.Fprintln(w, `{"statutus":"OK"}`)
+	})
+
+	err := client.Files.DeleteVideoPosition(1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// negative id
+	err = client.Files.DeleteVideoPosition(-1)
+	if err == nil {
+		t.Errorf("negative file id accepted")
+	}
+}
