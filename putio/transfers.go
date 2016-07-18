@@ -61,12 +61,15 @@ func (t *TransfersService) Add(url string, parent int, extract bool, callbackURL
 	if err != nil {
 		return Transfer{}, err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := t.client.Do(req)
 	if err != nil {
 		return Transfer{}, err
 	}
 	defer resp.Body.Close()
+
+	// FIXME: check statuscode
 
 	var r struct {
 		Transfer Transfer

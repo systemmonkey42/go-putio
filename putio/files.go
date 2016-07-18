@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // FilesServices is a general service to gather information about user files,
@@ -412,4 +413,172 @@ func (f *FilesService) Search(query string, page int) (Search, error) {
 	}
 
 	return s, nil
+}
+
+// FIXME: is it worth to export this method?
+func (f *FilesService) convert(id int) error {
+	if id < 0 {
+		return errNegativeID
+	}
+
+	req, err := f.client.NewRequest("POST", "/v2/files/"+strconv.Itoa(id)+"/mp4", nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Status string
+	}
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return err
+	}
+
+	// return original err
+	if r.Status != "OK" {
+		return fmt.Errorf("err")
+	}
+	return nil
+}
+
+// Subtitles lists available subtitles for the given file for user's prefered
+// subtitle language.
+func (f *FilesService) Subtitles(id int) ([]Subtitle, error) {
+	if id < 0 {
+		return nil, errNegativeID
+	}
+
+	req, err := f.client.NewRequest("GET", "/v2/files/"+strconv.Itoa(id)+"/subtitles", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Status    string
+		Subtitles []Subtitle
+		Default   string
+	}
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Subtitles, nil
+}
+
+// Sends the contents of the subtitle file. If the key is empty string,
+// `default` key is used. This key is used to search for a subtitle in the
+// following order and returns the first match:
+// - A subtitle file that has identical parent folder and name with the video.
+// - Subtitle file extracted from video if the format is MKV.
+// - First match from OpenSubtitles.org.
+func (f *FilesService) DownloadSubtitle(id int, key string, format string) (io.ReadCloser, error) {
+	if id < 0 {
+		return nil, errNegativeID
+	}
+
+	if key == "" {
+		key = "default"
+	}
+
+	req, err := f.client.NewRequest("GET", "/v2/files/"+strconv.Itoa(id)+"/subtitles/"+key, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return resp.Body, nil
+}
+
+// HLSPlaylist serves a HLS playlist for a video file. Use “all” as
+// subtitleKey to get available subtitles for user’s preferred languages.
+func (f *FilesService) HLSPlaylist(id int, subtitleKey string) (io.ReadCloser, error) {
+	if id < 0 {
+		return nil, errNegativeID
+	}
+
+	if subtitleKey == "" {
+		return nil, fmt.Errorf("empty subtitle key is given")
+	}
+
+	req, err := f.client.NewRequest("GET", "/v2/files/"+strconv.Itoa(id)+"/hls/media.m3u8?subtitle_key"+subtitleKey, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Body, nil
+}
+
+// SetVideoPosition sets default video position for a video file.
+func (f *FilesService) SetVideoPosition(id int, t time.Time) error {
+	if id < 0 {
+		return errNegativeID
+	}
+
+	params := url.Values{}
+	params.Set("time", strconv.Itoa(t.Second()))
+	req, err := f.client.NewRequest("POST", "/v2/files/"+strconv.Itoa(id)+"/start-from", strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Status string
+	}
+	// FIXME: check original error
+	return json.NewDecoder(resp.Body).Decode(&r)
+
+}
+
+// DeleteVideoPosition deletes video position for a video file.
+func (f *FilesService) DeleteVideoPosition(id int) error {
+	if id < 0 {
+		return errNegativeID
+	}
+
+	req, err := f.client.NewRequest("POST", "/v2/files/"+strconv.Itoa(id)+"/start-from", nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Status string
+	}
+	// FIXME: check original error
+	return json.NewDecoder(resp.Body).Decode(&r)
+
 }

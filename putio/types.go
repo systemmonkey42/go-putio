@@ -120,6 +120,23 @@ type Zip struct {
 	URL    string `json:"url"`
 }
 
+type Subtitle struct {
+	Key      string
+	Language string
+	Name     string
+	Source   string
+}
+
+type Event struct {
+	ID           int    `json:"id"`
+	FileID       int    `json:"file_id"`
+	Source       string `json:"source"`
+	Type         string `json:"type"`
+	TransferName string `json:"transfer_name"`
+	TransferSize int    `json:"transfer_size"`
+	CreatedAt    string `json:"created_at"`
+}
+
 // errorResponse represents a common error message that Put.io v2 API sends on
 // error.
 type errorResponse struct {

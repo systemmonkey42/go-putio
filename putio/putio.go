@@ -35,11 +35,12 @@ type Client struct {
 	UserAgent string
 
 	// Services used for communicating with the API
+	Account   *AccountService
 	Files     *FilesService
 	Transfers *TransfersService
 	Zips      *ZipsService
 	Friends   *FriendsService
-	Account   *AccountService
+	Events    *EventsService
 }
 
 // NewClient returns a new Put.io API client, using the htttpClient, which must
@@ -56,11 +57,12 @@ func NewClient(httpClient *http.Client) *Client {
 		BaseURL:   baseURL,
 		UserAgent: defaultUserAgent,
 	}
+	c.Account = &AccountService{client: c}
 	c.Files = &FilesService{client: c}
 	c.Transfers = &TransfersService{client: c}
 	c.Zips = &ZipsService{client: c}
 	c.Friends = &FriendsService{client: c}
-	c.Account = &AccountService{client: c}
+	c.Events = &EventsService{client: c}
 
 	return c
 }
