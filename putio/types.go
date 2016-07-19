@@ -8,8 +8,8 @@ type File struct {
 	Filename          string `json:"name"`
 	Filesize          int64  `json:"size"`
 	ContentType       string `json:"content_type"`
-	CreatedAt         string `json:"created_at"`
-	FirstAccessedAt   string `json:"first_accessed_at"`
+	CreatedAt         *Time  `json:"created_at"`
+	FirstAccessedAt   *Time  `json:"first_accessed_at"`
 	ParentID          int    `json:"parent_id"`
 	Screenshot        string `json:"screenshot"`
 	OpensubtitlesHash string `json:"opensubtitles_hash"`
@@ -36,7 +36,7 @@ type Search struct {
 type Transfer struct {
 	Availability       string  `json:"availability"`
 	CallbackURL        string  `json:"callback_url"`
-	CreatedAt          string  `json:"created_at"`
+	CreatedAt          *Time   `json:"created_at"`
 	CreatedTorrent     bool    `json:"created_torrent"`
 	ClientIP           string  `json:"client_ip"`
 	CurrentRatio       float32 `json:"current_ratio"`
@@ -47,7 +47,7 @@ type Transfer struct {
 	EstimatedTime      string  `json:"estimated_time"`
 	Extract            bool    `json:"extract"`
 	FileID             int     `json:"file_id"`
-	FinishedAt         string  `json:"finished_at"`
+	FinishedAt         *Time   `json:"finished_at"`
 	ID                 int     `json:"id"`
 	IsPrivate          bool    `json:"is_private"`
 	MagnetURI          string  `json:"magneturi"`
@@ -119,8 +119,8 @@ type Friend struct {
 
 // Zip represents Put.io zip file.
 type Zip struct {
-	ID        int    `json:"id"`
-	CreatedAt string `json:"created_at"`
+	ID        int   `json:"id"`
+	CreatedAt *Time `json:"created_at"`
 
 	Size   int    `json:"size"`
 	Status string `json:"status"`
@@ -146,7 +146,7 @@ type Event struct {
 	Type         string `json:"type"`
 	TransferName string `json:"transfer_name"`
 	TransferSize int    `json:"transfer_size"`
-	CreatedAt    string `json:"created_at"`
+	CreatedAt    *Time  `json:"created_at"`
 }
 
 type share struct {
