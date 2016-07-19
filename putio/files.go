@@ -32,8 +32,7 @@ func (f *FilesService) Get(id int) (File, error) {
 	}
 
 	var r struct {
-		File   File   `json:"file"`
-		Status string `json:"status"`
+		File File `json:"file"`
 	}
 	_, err = f.client.Do(req, &r)
 	if err != nil {

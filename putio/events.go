@@ -32,10 +32,7 @@ func (e *EventsService) Delete() error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	var r struct {
-		Status string
-	}
-	_, err = e.client.Do(req, &r)
+	_, err = e.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
