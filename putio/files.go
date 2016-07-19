@@ -639,7 +639,6 @@ func (f *FilesService) DownloadSubtitle(id int, key string, format string) (io.R
 	if key == "" {
 		key = "default"
 	}
-
 	req, err := f.client.NewRequest("GET", "/v2/files/"+strconv.Itoa(id)+"/subtitles/"+key, nil)
 	if err != nil {
 		return nil, err
@@ -649,7 +648,11 @@ func (f *FilesService) DownloadSubtitle(id int, key string, format string) (io.R
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+
+	// FIXME return proper error
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("not ok")
+	}
 
 	return resp.Body, nil
 }

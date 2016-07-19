@@ -686,3 +686,138 @@ func TestFiles_SharedWith(t *testing.T) {
 		t.Errorf("got: %v, want: %v", len(files), 2)
 	}
 }
+
+func TestFiles_Subtitles(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fixture := `
+{
+	"default": "key0",
+	"status": "OK",
+	"subtitles": [
+		{
+			"key": "key0",
+			"language": "Turkish",
+			"language_code": "tur",
+			"name": "Big Buck Bunny",
+			"source": "opensubtitles"
+		},
+		{
+			"key": "key1",
+			"language": "English",
+			"language_code": "eng",
+			"name": "Big Buck Bunny",
+			"source": "opensubtitles"
+		}
+	]
+}
+`
+	mux.HandleFunc("/v2/files/1/subtitles", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprintln(w, fixture)
+	})
+
+	subtitles, err := client.Files.Subtitles(1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(subtitles) != 2 {
+		t.Errorf("got: %v, want: %v", len(subtitles), 2)
+	}
+
+	if subtitles[0].Key != "key0" {
+		t.Errorf("got: %v, want: %v", subtitles[0].Key, "key0")
+	}
+
+	// negative id
+	_, err = client.Files.Subtitles(-1)
+	if err == nil {
+		t.Errorf("negative file ID accepted")
+	}
+}
+
+func TestFiles_DownloadSubtitle(t *testing.T) {
+	setup()
+	defer teardown()
+
+	fileContent := `
+1
+00:03:07,834 --> 00:03:09,904
+Let's go down.
+
+2
+00:03:20,474 --> 00:03:24,388
+- You got some out. How many left?
+- Three out, eight left.
+`
+	mux.HandleFunc("/v2/files/1/subtitles/", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		// trim leading and trailing slashes and split the url path
+		f := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+
+		var key string
+		// empty key means `default`
+		if len(f) == 4 {
+			key = "default"
+		}
+		// grab the last item of the path
+		if len(f) == 5 {
+			key = f[len(f)-1]
+		}
+
+		switch key {
+		case "default", "key0":
+			http.ServeContent(w, r, "big.buck.bunny.srt", time.Now().UTC(), strings.NewReader(fileContent))
+		default:
+			http.NotFound(w, r)
+		}
+	})
+
+	// valid file ID and valid key
+	rc, err := client.Files.DownloadSubtitle(1, "key0", "")
+	if err != nil {
+		t.Error(err)
+	}
+	defer rc.Close()
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, rc)
+	if err != nil {
+		t.Error(err)
+	}
+	if buf.String() != fileContent {
+		t.Errorf("got: %v, want: %v", buf.String(), fileContent)
+	}
+
+	// negative file ID
+	rc, err = client.Files.DownloadSubtitle(-1, "key0", "")
+	if err == nil {
+		defer rc.Close()
+		t.Errorf("negative file ID accepted")
+	}
+
+	// invalid key
+	rc, err = client.Files.DownloadSubtitle(1, "key3", "")
+	if err == nil {
+		defer rc.Close()
+		t.Errorf("invalid key accepted")
+	}
+
+	// empty key
+	rc, err = client.Files.DownloadSubtitle(1, "", "")
+	if err != nil {
+		t.Error(err)
+	}
+	defer rc.Close()
+
+	buf.Reset()
+	_, err = io.Copy(&buf, rc)
+	if err != nil {
+		t.Error(err)
+	}
+	if buf.String() != fileContent {
+		t.Errorf("got: %v, want: %v", buf.String(), fileContent)
+	}
+}
