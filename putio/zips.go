@@ -51,8 +51,8 @@ func (z *ZipsService) List() ([]Zip, error) {
 	return r.Zips, nil
 }
 
-// Create creates zip files for given zip IDs. If the operation is successful,
-// a zip ID will be returned to keep track of the status of zipping process.
+// Create creates zip files for given file IDs. If the operation is successful,
+// a zip ID will be returned to keep track of zip process.
 func (z *ZipsService) Create(fileIDs ...int) (int, error) {
 	if len(fileIDs) == 0 {
 		return 0, fmt.Errorf("no file id given")
