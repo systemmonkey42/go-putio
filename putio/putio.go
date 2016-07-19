@@ -89,26 +89,30 @@ func (c *Client) NewRequest(method, relURL string, body io.Reader) (*http.Reques
 	return req, nil
 }
 
-// Do sends an API request and returns the API response.
+// Do sends an API request and returns the API response. The API response is
+// JSON decoded and stored in the value pointed to by v, or returned as an
+// error if an API error has occurred. Response body is closed at all cases except
+// v is nil. If v is nil, response body is not closed and the body can be used
+// for streaming.
 func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
 	resp, err := c.client.Do(r)
 	if err != nil {
 		return nil, err
 	}
-	// we may return the response.Body for file/subtitle downloads. Do not
-	// close the stream if there is no data structure to unmarshal.
-	if v != nil {
-		defer resp.Body.Close()
-	}
 
 	err = checkResponse(resp)
 	if err != nil {
+		// close the body at all times if there is an http error.
+		resp.Body.Close()
 		return resp, err
 	}
 
 	if v == nil {
 		return resp, nil
 	}
+
+	// close the body for all cases from here.
+	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(v)
 	if err != nil {
