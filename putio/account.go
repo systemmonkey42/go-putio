@@ -58,6 +58,6 @@ func (a *AccountService) Settings() (Settings, error) {
 }
 
 // FIXME: fill
-func (a *AccountService) UpdateSettings() error {
+func (a *AccountService) updateSettings() error {
 	panic("not implemented yet")
 }
