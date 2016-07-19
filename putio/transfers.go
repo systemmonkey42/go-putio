@@ -2,7 +2,7 @@ package putio
 
 import (
 	"fmt"
-	urlpkg "net/url"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -36,13 +36,13 @@ func (t *TransfersService) List() ([]Transfer, error) {
 // Parent is the folder where the new transfer is downloaded to. If a negative
 // value is given, user's preferred download folder is used. CallbackURL is
 // used to send a POST request after the transfer is finished downloading.
-func (t *TransfersService) Add(url string, parent int, callbackURL string) (Transfer, error) {
-	if url == "" {
+func (t *TransfersService) Add(urlStr string, parent int, callbackURL string) (Transfer, error) {
+	if urlStr == "" {
 		return Transfer{}, fmt.Errorf("empty URL")
 	}
 
-	params := urlpkg.Values{}
-	params.Set("url", url)
+	params := url.Values{}
+	params.Set("url", urlStr)
 	// negative values indicate user's preferred download folder. don't include
 	// it in the request.
 	if parent >= 0 {
@@ -91,8 +91,30 @@ func (t *TransfersService) Get(id int) (Transfer, error) {
 	return r.Transfer, nil
 }
 
-// FIXME: fill
-func (t *TransfersService) retry(id int) {
+// Retry retries previously failed transfer.
+func (t *TransfersService) Retry(id int) (Transfer, error) {
+	if id < 0 {
+		return Transfer{}, errNegativeID
+	}
+
+	params := url.Values{}
+	params.Set("id", strconv.Itoa(id))
+
+	req, err := t.client.NewRequest("POST", "/v2/transfers/retry", strings.NewReader(params.Encode()))
+	if err != nil {
+		return Transfer{}, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	var r struct {
+		Transfer Transfer
+	}
+	_, err = t.client.Do(req, &r)
+	if err != nil {
+		return Transfer{}, err
+	}
+
+	return r.Transfer, nil
 }
 
 // Cancel deletes given transfers.
@@ -109,7 +131,7 @@ func (t *TransfersService) Cancel(ids ...int) error {
 		transfers = append(transfers, strconv.Itoa(id))
 	}
 
-	params := urlpkg.Values{}
+	params := url.Values{}
 	params.Set("transfer_ids", strings.Join(transfers, ","))
 
 	req, err := t.client.NewRequest("POST", "/v2/transfers/cancel", strings.NewReader(params.Encode()))
