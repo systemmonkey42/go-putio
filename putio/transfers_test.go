@@ -214,7 +214,7 @@ func TestTransfers_Add(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	transfer, err := client.Transfers.Add("http://releases.ubuntu.com/16.04/ubuntu-16.04-desktop-amd64.iso.torrent", 0, false, "")
+	transfer, err := client.Transfers.Add("http://releases.ubuntu.com/16.04/ubuntu-16.04-desktop-amd64.iso.torrent", 0, "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -224,15 +224,15 @@ func TestTransfers_Add(t *testing.T) {
 	}
 
 	// empty URL
-	_, err = client.Transfers.Add("", 0, false, "")
+	_, err = client.Transfers.Add("", 0, "")
 	if err == nil {
 		t.Errorf("empty URL accepted")
 	}
 
-	// invalid parent id
-	_, err = client.Transfers.Add("filepath", -1, false, "")
-	if err == nil {
-		t.Errorf("invalid parent id accepted")
+	// negative parent id should be accepted
+	_, err = client.Transfers.Add("filepath", -1, "")
+	if err != nil {
+		t.Error(err)
 	}
 }
 

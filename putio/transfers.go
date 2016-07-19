@@ -38,24 +38,25 @@ func (t *TransfersService) List() ([]Transfer, error) {
 	return r.Transfers, nil
 }
 
-// Add creates a new transfer.
-// Add expects a valid torrent/magnet URL. Other parameters are optional.
-//
-// FIXME: change signateure?
-func (t *TransfersService) Add(url string, parent int, extract bool, callbackURL string) (Transfer, error) {
-	if parent < 0 {
-		return Transfer{}, errNegativeID
-	}
-
+// Add creates a new transfer. A valid torrent or a magnet URL is expected.
+// Parent is the folder where the new transfer is downloaded to. If a negative
+// value is given, user's preferred download folder is used. CallbackURL is
+// used to send a POST request after the transfer is finished downloading.
+func (t *TransfersService) Add(url string, parent int, callbackURL string) (Transfer, error) {
 	if url == "" {
 		return Transfer{}, fmt.Errorf("empty URL")
 	}
 
 	params := urlpkg.Values{}
 	params.Set("url", url)
-	params.Set("parent", strconv.Itoa(parent))
-	params.Set("extract", strconv.FormatBool(extract))
-	params.Set("callback_url", callbackURL)
+	// negative values indicate user's preferred download folder. don't include
+	// it in the request.
+	if parent >= 0 {
+		params.Set("parent", strconv.Itoa(parent))
+	}
+	if callbackURL != "" {
+		params.Set("callback_url", callbackURL)
+	}
 
 	req, err := t.client.NewRequest("POST", "/v2/transfers/add", strings.NewReader(params.Encode()))
 	if err != nil {
