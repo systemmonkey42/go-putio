@@ -329,9 +329,25 @@ func TestFiles_Download(t *testing.T) {
 		http.ServeContent(w, r, "testfile", time.Now().UTC(), buf)
 	})
 
+	paymentRequiredHandler := func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		errorBody := `
+{
+	"status": "ERROR",
+	"status_code": 402,
+	"error_type": "BadRequest",
+	"error_message": "Payment required",
+	"error_uri": "http://api.put.io/v2/docs"
+}`
+		w.WriteHeader(http.StatusPaymentRequired)
+		fmt.Fprintln(w, errorBody)
+		return
+	}
+	mux.HandleFunc("/v2/files/2/download", paymentRequiredHandler)
+
 	rc, err := client.Files.Download(1, false, nil)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	defer rc.Close()
 
@@ -355,7 +371,7 @@ func TestFiles_Download(t *testing.T) {
 	// tunneled download
 	rc, err = client.Files.Download(1, true, nil)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	defer rc.Close()
 
@@ -374,7 +390,7 @@ func TestFiles_Download(t *testing.T) {
 	rangeHeader.Set("Range", fmt.Sprintf("bytes=%v-%v", 0, 3))
 	rc, err = client.Files.Download(1, false, rangeHeader)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	defer rc.Close()
 
@@ -387,6 +403,12 @@ func TestFiles_Download(t *testing.T) {
 	response = buf.String()
 	if response != "0123" {
 		t.Errorf("got: %v, want: 0123", response)
+	}
+
+	// payment required
+	_, err = client.Files.Download(2, false, nil)
+	if err != ErrPaymentRequired {
+		t.Errorf("payment-required error should be returned")
 	}
 }
 
