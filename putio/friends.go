@@ -1,9 +1,6 @@
 package putio
 
-import (
-	"encoding/json"
-	"fmt"
-)
+import "fmt"
 
 // FriendsService is the service to operate on user friends.
 type FriendsService struct {
@@ -16,22 +13,16 @@ func (f *FriendsService) List() ([]Friend, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	var r struct {
 		Friends []Friend
-		Status  string
 		Total   int
 	}
-
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
+
 	return r.Friends, nil
 }
 
@@ -41,21 +32,15 @@ func (f *FriendsService) WaitingRequests() ([]Friend, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	var r struct {
 		Friends []Friend
-		Status  string
 	}
-
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
+
 	return r.Friends, nil
 }
 
@@ -70,17 +55,12 @@ func (f *FriendsService) Request(username string) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	var r struct {
-		Status string
-	}
-
-	return json.NewDecoder(resp.Body).Decode(&r)
+	return nil
 }
 
 // Approve approves a friend request from the given username.
@@ -95,17 +75,11 @@ func (f *FriendsService) Approve(username string) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	var r struct {
-		Status string
-	}
-
-	return json.NewDecoder(resp.Body).Decode(&r)
+	return nil
 }
 
 // Deny denies a friend request from the given username.
@@ -120,17 +94,11 @@ func (f *FriendsService) Deny(username string) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	var r struct {
-		Status string
-	}
-
-	return json.NewDecoder(resp.Body).Decode(&r)
+	return nil
 }
 
 // Unfriend removed friend from user's friend list.
@@ -145,15 +113,9 @@ func (f *FriendsService) Unfriend(username string) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	var r struct {
-		Status string
-	}
-
-	return json.NewDecoder(resp.Body).Decode(&r)
+	return nil
 }

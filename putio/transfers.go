@@ -1,7 +1,6 @@
 package putio
 
 import (
-	"encoding/json"
 	"fmt"
 	urlpkg "net/url"
 	"strconv"
@@ -21,20 +20,15 @@ func (t *TransfersService) List() ([]Transfer, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := t.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	var r struct {
 		Transfers []Transfer
-		Status    string
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = t.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
+
 	return r.Transfers, nil
 }
 
@@ -64,23 +58,14 @@ func (t *TransfersService) Add(url string, parent int, callbackURL string) (Tran
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := t.client.Do(req)
-	if err != nil {
-		return Transfer{}, err
-	}
-	defer resp.Body.Close()
-
-	// FIXME: check statuscode
-
 	var r struct {
 		Transfer Transfer
-		Status   string
 	}
-
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = t.client.Do(req, &r)
 	if err != nil {
 		return Transfer{}, err
 	}
+
 	return r.Transfer, nil
 }
 
@@ -95,21 +80,14 @@ func (t *TransfersService) Get(id int) (Transfer, error) {
 		return Transfer{}, err
 	}
 
-	resp, err := t.client.Do(req)
-	if err != nil {
-		return Transfer{}, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
 		Transfer Transfer
-		Status   string
 	}
-
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = t.client.Do(req, &r)
 	if err != nil {
 		return Transfer{}, err
 	}
+
 	return r.Transfer, nil
 }
 
@@ -133,31 +111,19 @@ func (t *TransfersService) Cancel(ids ...int) error {
 
 	params := urlpkg.Values{}
 	params.Set("transfer_ids", strings.Join(transfers, ","))
+
 	req, err := t.client.NewRequest("POST", "/v2/transfers/cancel", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := t.client.Do(req)
+	_, err = t.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	var r struct {
-		Status string
-	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
-	if err != nil {
-		return err
-	}
-	if r.Status == "OK" {
-		return nil
-	}
-
-	// FIXME: send the actual error
-	return fmt.Errorf("err")
+	return nil
 }
 
 // Clean removes completed transfers from the transfer list.
@@ -168,23 +134,10 @@ func (t *TransfersService) Clean() error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := t.client.Do(req)
+	_, err = t.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	var r struct {
-		Status string
-	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
-	if err != nil {
-		return err
-	}
-	if r.Status == "OK" {
-		return nil
-	}
-
-	// FIXME: send the actual error
-	return fmt.Errorf("err")
+	return nil
 }

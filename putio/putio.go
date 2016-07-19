@@ -1,8 +1,10 @@
 package putio
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -16,8 +18,8 @@ const (
 
 // errors
 var (
-	ErrNotExist        = fmt.Errorf("file does not exist")
-	ErrPaymentRequired = fmt.Errorf("payment required")
+	ErrResourceNotFound = fmt.Errorf("resource does not exist")
+	ErrPaymentRequired  = fmt.Errorf("payment required")
 
 	errRedirect   = fmt.Errorf("redirect attempt on a no-redirect client")
 	errNegativeID = fmt.Errorf("file id cannot be negative")
@@ -88,8 +90,32 @@ func (c *Client) NewRequest(method, relURL string, body io.Reader) (*http.Reques
 }
 
 // Do sends an API request and returns the API response.
-func (c *Client) Do(r *http.Request) (*http.Response, error) {
-	return c.client.Do(r)
+func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
+	resp, err := c.client.Do(r)
+	if err != nil {
+		return nil, err
+	}
+	// we may return the response.Body for file/subtitle downloads. Do not
+	// close the stream if there is no data structure to unmarshal.
+	if v != nil {
+		defer resp.Body.Close()
+	}
+
+	err = checkResponse(resp)
+	if err != nil {
+		return resp, err
+	}
+
+	if v == nil {
+		return resp, nil
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(v)
+	if err != nil {
+		return resp, err
+	}
+
+	return resp, nil
 }
 
 // redirectOnceFunc follows the redirect only once, and copies the original
@@ -114,22 +140,47 @@ func redirectOnceFunc(req *http.Request, via []*http.Request) error {
 
 // ErrorResponse reports the error caused by an API request.
 type ErrorResponse struct {
-	Response *http.Response
-	Message  string
+	Response *http.Response `json:"-"`
+
+	Message string `json:"error_message"`
+	Type    string `json:"error_type"`
 }
 
 func (e *ErrorResponse) Error() string {
-	return fmt.Sprintf("%v %v: %d %v",
+	return fmt.Sprintf(
+		"Type: %v Message: %q. Original error: %v %v: %v",
+		e.Type,
+		e.Message,
 		e.Response.Request.Method,
 		e.Response.Request.URL,
-		e.Response.StatusCode,
-		e.Message)
+		e.Response.Status,
+	)
 }
 
+// checkResponse is the entrypoint to reading the API response. If the response
+// status code is not in success range, it will try to return a structured
+// error.
 func checkResponse(r *http.Response) error {
-	if code := r.StatusCode; code >= 200 && code <= 299 {
+	statusCode := r.StatusCode
+	if statusCode >= 200 && statusCode <= 299 {
 		return nil
 	}
 
-	return &ErrorResponse{Response: r}
+	if statusCode == http.StatusNotFound {
+		return ErrResourceNotFound
+	}
+
+	if statusCode == http.StatusPaymentRequired {
+		return ErrPaymentRequired
+	}
+
+	errorResponse := &ErrorResponse{Response: r}
+	data, err := ioutil.ReadAll(r.Body)
+	if err == nil && len(data) > 0 {
+		err = json.Unmarshal(data, errorResponse)
+		if err != nil {
+			return err
+		}
+	}
+	return errorResponse
 }

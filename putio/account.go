@@ -1,9 +1,5 @@
 package putio
 
-import (
-	"encoding/json"
-)
-
 // AccountService is the service to gather information about user account.
 type AccountService struct {
 	client *Client
@@ -15,21 +11,14 @@ func (a *AccountService) Info() (Info, error) {
 	if err != nil {
 		return Info{}, nil
 	}
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return Info{}, err
-	}
-	defer resp.Body.Close()
 
 	var r struct {
-		Info   Info
-		Status string
+		Info Info
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = a.client.Do(req, &r)
 	if err != nil {
 		return Info{}, err
 	}
-
 	return r.Info, nil
 }
 
@@ -39,17 +28,10 @@ func (a *AccountService) Settings() (Settings, error) {
 	if err != nil {
 		return Settings{}, nil
 	}
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return Settings{}, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
 		Settings Settings
-		Status   string
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = a.client.Do(req, &r)
 	if err != nil {
 		return Settings{}, err
 	}

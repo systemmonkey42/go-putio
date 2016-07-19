@@ -1,7 +1,6 @@
 package putio
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -24,15 +23,8 @@ func (z *ZipsService) Get(id int) (Zip, error) {
 		return Zip{}, err
 	}
 
-	resp, err := z.client.Do(req)
-	if err != nil {
-		return Zip{}, err
-	}
-	defer resp.Body.Close()
-
-	// FIXME: handle missing_files field
 	var r Zip
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = z.client.Do(req, &r)
 	if err != nil {
 		return Zip{}, err
 	}
@@ -48,17 +40,10 @@ func (z *ZipsService) List() ([]Zip, error) {
 		return nil, err
 	}
 
-	resp, err := z.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
-		Zips   []Zip
-		Status string
+		Zips []Zip
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = z.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
@@ -83,25 +68,20 @@ func (z *ZipsService) Create(fileIDs ...int) (int, error) {
 
 	params := url.Values{}
 	params.Set("file_ids", strings.Join(ids, ","))
+
 	req, err := z.client.NewRequest("POST", "/v2/zips/create", strings.NewReader(params.Encode()))
 	if err != nil {
 		return 0, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := z.client.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
-		ID     int `json:"zip_id"`
-		Status string
+		ID int `json:"zip_id"`
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = z.client.Do(req, &r)
 	if err != nil {
 		return 0, err
 	}
+
 	return r.ID, nil
 }

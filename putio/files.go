@@ -2,7 +2,6 @@ package putio
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -31,29 +30,16 @@ func (f *FilesService) Get(id int) (File, error) {
 	if err != nil {
 		return File{}, err
 	}
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return File{}, err
-	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusNotFound {
-		return File{}, ErrNotExist
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return File{}, fmt.Errorf("get request failed with status: %v", resp.Status)
-	}
-
-	var getResponse struct {
+	var r struct {
 		File   File   `json:"file"`
 		Status string `json:"status"`
 	}
-	err = json.NewDecoder(resp.Body).Decode(&getResponse)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return File{}, err
 	}
-	return getResponse.File, nil
+	return r.File, nil
 }
 
 // List fetches children for given directory ID.
@@ -66,27 +52,11 @@ func (f *FilesService) List(id int) ([]File, File, error) {
 		return nil, File{}, err
 	}
 
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return nil, File{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, File{}, ErrNotExist
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, File{}, fmt.Errorf("list request failed. HTTP Status: %v", resp.Status)
-	}
-
 	var r struct {
 		Files  []File `json:"files"`
 		Parent File   `json:"parent"`
-		Status string `json:"status"`
 	}
-
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return nil, File{}, err
 	}
@@ -130,22 +100,9 @@ func (f *FilesService) Download(id int, useTunnel bool, headers http.Header) (io
 		f.client.client.CheckRedirect = nil
 	}()
 
-	resp, err := f.client.Do(req)
+	resp, err := f.client.Do(req, nil)
 	if err != nil {
 		return nil, err
-	}
-
-	if resp.StatusCode >= 400 {
-		if resp.Body != nil {
-			resp.Body.Close()
-		}
-		if resp.StatusCode == http.StatusNotFound {
-			return nil, ErrNotExist
-		}
-		if resp.StatusCode == http.StatusPaymentRequired {
-			return nil, ErrPaymentRequired
-		}
-		return nil, fmt.Errorf("unexpected HTTP status: %v", resp.Status)
 	}
 
 	return resp.Body, nil
@@ -171,21 +128,10 @@ func (f *FilesService) CreateFolder(name string, parent int) (File, error) {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return File{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return File{}, fmt.Errorf("create-folder request failed. HTTP Status: %v", resp.Status)
-	}
-
 	var r struct {
-		File   File   `json:"file"`
-		Status string `json:"status"`
+		File File `json:"file"`
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return File{}, err
 	}
@@ -216,25 +162,10 @@ func (f *FilesService) Delete(files ...int) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("delete request failed. HTTP Status: %v", resp.Status)
-	}
-
-	var r errorResponse
-	err = json.NewDecoder(resp.Body).Decode(&r)
-	if err != nil {
-		return err
-	}
-	if r.Status != "OK" {
-		return fmt.Errorf(r.ErrorMessage)
-	}
-
 	return nil
 }
 
@@ -257,23 +188,9 @@ func (f *FilesService) Rename(id int, newname string) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("rename request failed. HTTP Status: %v", resp.Status)
-	}
-
-	var r errorResponse
-	err = json.NewDecoder(resp.Body).Decode(&r)
-	if err != nil {
-		return err
-	}
-	if r.Status != "OK" {
-		return fmt.Errorf(r.ErrorMessage)
 	}
 
 	return nil
@@ -300,31 +217,17 @@ func (f *FilesService) Move(parent int, files ...int) error {
 	params := url.Values{}
 	params.Set("file_ids", strings.Join(ids, ","))
 	params.Set("parent_id", strconv.Itoa(parent))
+
 	req, err := f.client.NewRequest("POST", "/v2/files/move", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("move request failed. HTTP Status: %v", resp.Status)
-	}
-
-	var r errorResponse
-	err = json.NewDecoder(resp.Body).Decode(&r)
-	if err != nil {
-		return err
-	}
-	if r.Status != "OK" {
-		return fmt.Errorf(r.ErrorMessage)
-	}
-
 	return nil
 }
 
@@ -386,42 +289,14 @@ func (f *FilesService) Upload(fpath, filename string, parent int) (Upload, error
 	}
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return Upload{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		// decode error response
-		var errResp errorResponse
-		err := json.NewDecoder(resp.Body).Decode(&errResp)
-		if err != nil {
-			return Upload{}, err
-		}
-		return Upload{}, fmt.Errorf("Upload failed. %v", errResp)
-	}
-
-	var upload struct {
+	var r struct {
 		Upload
-		Status string
 	}
-	err = json.NewDecoder(resp.Body).Decode(&upload)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return Upload{}, err
 	}
-
-	if upload.Status == "ERROR" {
-		// decode error response
-		var errResp errorResponse
-		err := json.NewDecoder(resp.Body).Decode(&errResp)
-		if err != nil {
-			return Upload{}, err
-		}
-		return Upload{}, fmt.Errorf("Upload failed. %v", errResp)
-	}
-
-	return upload.Upload, nil
+	return r.Upload, nil
 }
 
 // Search makes a search request with the given query. Servers return 50
@@ -439,28 +314,14 @@ func (f *FilesService) Search(query string, page int) (Search, error) {
 	if err != nil {
 		return Search{}, err
 	}
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return Search{}, err
-	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		var errResp errorResponse
-		err = json.NewDecoder(resp.Body).Decode(&errResp)
-		if err != nil {
-			return Search{}, err
-		}
-		return Search{}, fmt.Errorf("search request failed. %v", errResp)
-	}
-
-	var s Search
-	err = json.NewDecoder(resp.Body).Decode(&s)
+	var r Search
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return Search{}, err
 	}
 
-	return s, nil
+	return r, nil
 }
 
 // FIXME: is it worth to export this method?
@@ -474,24 +335,11 @@ func (f *FilesService) convert(id int) error {
 		return err
 	}
 
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	var r struct {
-		Status string
-	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
 
-	// return original err
-	if r.Status != "OK" {
-		return fmt.Errorf("err")
-	}
 	return nil
 }
 
@@ -520,22 +368,19 @@ func (f *FilesService) share(files []int, friends ...string) error {
 	params := url.Values{}
 	params.Set("file_ids", strings.Join(ids, ","))
 	params.Set("friends", friendsParam)
+
 	req, err := f.client.NewRequest("POST", "/v2/files/share", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	var r struct {
-		Status string
-	}
-	return json.NewDecoder(resp.Body).Decode(&r)
+	return nil
 }
 
 // Shared returns list of shared files and share information.
@@ -545,20 +390,14 @@ func (f *FilesService) shared() ([]share, error) {
 		return nil, err
 	}
 
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
 		Shared []share
-		Status string
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
+
 	return r.Shared, nil
 }
 
@@ -576,17 +415,10 @@ func (f *FilesService) sharedWith(id int) ([]share, error) {
 		return nil, err
 	}
 
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
 		Shared []share `json:"shared-with"`
-		Status string
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
@@ -606,18 +438,11 @@ func (f *FilesService) Subtitles(id int) ([]Subtitle, error) {
 		return nil, err
 	}
 
-	resp, err := f.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
-		Status    string
 		Subtitles []Subtitle
 		Default   string
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = f.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
@@ -644,14 +469,9 @@ func (f *FilesService) DownloadSubtitle(id int, key string, format string) (io.R
 		return nil, err
 	}
 
-	resp, err := f.client.Do(req)
+	resp, err := f.client.Do(req, nil)
 	if err != nil {
 		return nil, err
-	}
-
-	// FIXME return proper error
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("not ok")
 	}
 
 	return resp.Body, nil
@@ -673,7 +493,7 @@ func (f *FilesService) HLSPlaylist(id int, subtitleKey string) (io.ReadCloser, e
 		return nil, err
 	}
 
-	resp, err := f.client.Do(req)
+	resp, err := f.client.Do(req, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -693,24 +513,19 @@ func (f *FilesService) SetVideoPosition(id int, t int) error {
 
 	params := url.Values{}
 	params.Set("time", strconv.Itoa(t))
+
 	req, err := f.client.NewRequest("POST", "/v2/files/"+strconv.Itoa(id)+"/start-from", strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	var r struct {
-		Status string
-	}
-	// FIXME: check original error
-	return json.NewDecoder(resp.Body).Decode(&r)
-
+	return nil
 }
 
 // DeleteVideoPosition deletes video position for a video file.
@@ -725,16 +540,10 @@ func (f *FilesService) DeleteVideoPosition(id int) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := f.client.Do(req)
+	_, err = f.client.Do(req, &struct{}{})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	var r struct {
-		Status string
-	}
-	// FIXME: check original error
-	return json.NewDecoder(resp.Body).Decode(&r)
-
+	return nil
 }

@@ -1,7 +1,5 @@
 package putio
 
-import "encoding/json"
-
 // EventsService is the service to gather information about user's events.
 type EventsService struct {
 	client *Client
@@ -15,21 +13,13 @@ func (e *EventsService) List() ([]Event, error) {
 		return nil, err
 	}
 
-	resp, err := e.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
-		Status string
 		Events []Event
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	_, err = e.client.Do(req, &r)
 	if err != nil {
 		return nil, err
 	}
-
 	return r.Events, nil
 
 }
@@ -42,16 +32,13 @@ func (e *EventsService) Delete() error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := e.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
 	var r struct {
 		Status string
 	}
+	_, err = e.client.Do(req, &r)
+	if err != nil {
+		return err
+	}
 
-	// FIXME: return original error
-	return json.NewDecoder(resp.Body).Decode(&r)
+	return nil
 }

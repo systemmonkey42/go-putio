@@ -39,6 +39,7 @@ func TestFiles_Get(t *testing.T) {
 		testMethod(t, r, "GET")
 		fmt.Fprintln(w, fixture)
 	})
+	mux.HandleFunc("/v2/files/2", http.NotFound)
 
 	file, err := client.Files.Get(1)
 	if err != nil {
@@ -53,6 +54,12 @@ func TestFiles_Get(t *testing.T) {
 	_, err = client.Files.Get(-1)
 	if err == nil {
 		t.Errorf("negative id accepted")
+	}
+
+	// non-existent file
+	_, err = client.Files.Get(2)
+	if err != ErrResourceNotFound {
+		t.Errorf("got: %v, want: %v", err, ErrResourceNotFound)
 	}
 }
 
@@ -114,6 +121,14 @@ func TestFiles_List(t *testing.T) {
 `
 	mux.HandleFunc("/v2/files/list", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
+
+		// not found handler
+		parentID := r.URL.Query().Get("parent_id")
+		if parentID == "2" {
+			http.NotFound(w, r)
+			return
+		}
+
 		fmt.Fprintln(w, fixture)
 	})
 
@@ -133,6 +148,12 @@ func TestFiles_List(t *testing.T) {
 	_, _, err = client.Files.List(-1)
 	if err == nil {
 		t.Errorf("negative id accepted")
+	}
+
+	// non-existent parent folder
+	_, _, err = client.Files.List(2)
+	if err != ErrResourceNotFound {
+		t.Errorf("got: %v, want: %v", err, ErrResourceNotFound)
 	}
 }
 
@@ -325,8 +346,9 @@ func TestFiles_Download(t *testing.T) {
 	}
 
 	// negative id
-	_, err = client.Files.Download(-1, false, nil)
+	rc, err = client.Files.Download(-1, false, nil)
 	if err == nil {
+		defer rc.Close()
 		t.Errorf("negative id accepted")
 	}
 
@@ -336,6 +358,7 @@ func TestFiles_Download(t *testing.T) {
 		t.Error(err)
 	}
 	defer rc.Close()
+
 	buf.Reset()
 	_, err = io.Copy(&buf, rc)
 	if err != nil {
