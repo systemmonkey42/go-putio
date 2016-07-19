@@ -16,7 +16,7 @@ func (t *Time) String() string {
 // UnmarshalJSON implements the json.Unmarshaler interface.
 func (t *Time) UnmarshalJSON(data []byte) error {
 	// put.io API has inconsistent time layouts for different endpoints, such
-	// as /files and /events.
+	// as /files and /events
 	var timeLayouts = []string{`"2006-01-02T15:04:05"`, `"2006-01-02 15:04:05"`}
 
 	s := string(data)

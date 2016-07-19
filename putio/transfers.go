@@ -44,7 +44,7 @@ func (t *TransfersService) Add(urlStr string, parent int, callbackURL string) (T
 	params := url.Values{}
 	params.Set("url", urlStr)
 	// negative values indicate user's preferred download folder. don't include
-	// it in the request.
+	// it in the request
 	if parent >= 0 {
 		params.Set("parent", strconv.Itoa(parent))
 	}

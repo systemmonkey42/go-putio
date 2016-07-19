@@ -29,7 +29,7 @@ type Client struct {
 	// HTTP client used to communicate with Put.io API
 	client *http.Client
 
-	// Base URL for API requests.
+	// Base URL for API requests
 	BaseURL *url.URL
 
 	// User agent for client
@@ -101,7 +101,7 @@ func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
 
 	err = checkResponse(resp)
 	if err != nil {
-		// close the body at all times if there is an http error.
+		// close the body at all times if there is an http error
 		resp.Body.Close()
 		return resp, err
 	}
@@ -110,7 +110,7 @@ func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
 		return resp, nil
 	}
 
-	// close the body for all cases from here.
+	// close the body for all cases from here
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(v)
