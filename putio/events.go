@@ -5,8 +5,9 @@ type EventsService struct {
 	client *Client
 }
 
-// List gets list of dashboard events. It includes downloads and share events.
 // FIXME: events list returns inconsistent data structures.
+
+// List gets list of dashboard events. It includes downloads and share events.
 func (e *EventsService) List() ([]Event, error) {
 	req, err := e.client.NewRequest("GET", "/v2/events/list", nil)
 	if err != nil {
