@@ -91,7 +91,7 @@ func TestZips_Create(t *testing.T) {
 
 	id, err := client.Zips.Create(666)
 	if err != nil {
-		t.Error("zips.Create() returned error: %v", err)
+		t.Error(err)
 	}
 
 	if id != 4177264 {

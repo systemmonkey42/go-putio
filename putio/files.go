@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-// FilesServices is a general service to gather information about user files,
+// FilesService is a general service to gather information about user files,
 // such as listing, searching, creating new ones, or just fetching a single
 // file.
 type FilesService struct {
@@ -404,7 +404,7 @@ func (f *FilesService) Upload(fpath, filename string, parent int) (Upload, error
 
 	var upload struct {
 		Upload
-		Status string `json"status"`
+		Status string
 	}
 	err = json.NewDecoder(resp.Body).Decode(&upload)
 	if err != nil {
@@ -625,7 +625,7 @@ func (f *FilesService) Subtitles(id int) ([]Subtitle, error) {
 	return r.Subtitles, nil
 }
 
-// Sends the contents of the subtitle file. If the key is empty string,
+// DownloadSubtitle sends the contents of the subtitle file. If the key is empty string,
 // `default` key is used. This key is used to search for a subtitle in the
 // following order and returns the first match:
 // - A subtitle file that has identical parent folder and name with the video.

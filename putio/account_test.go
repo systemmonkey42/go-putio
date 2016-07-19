@@ -64,7 +64,7 @@ func TestAccount_Info(t *testing.T) {
 
 	info, err := client.Account.Info()
 	if err != nil {
-		t.Error("account.Info() returned error: %v", err)
+		t.Error(err)
 	}
 
 	if info.Username != "naber" {
