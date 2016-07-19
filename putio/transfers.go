@@ -113,7 +113,7 @@ func (t *TransfersService) Get(id int) (Transfer, error) {
 }
 
 // FIXME: fill
-func (t *TransfersService) Retry(id int) {
+func (t *TransfersService) retry(id int) {
 }
 
 // Cancel deletes given transfers.

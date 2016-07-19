@@ -111,3 +111,25 @@ func redirectOnceFunc(req *http.Request, via []*http.Request) error {
 	}
 	return nil
 }
+
+// ErrorResponse reports the error caused by an API request.
+type ErrorResponse struct {
+	Response *http.Response
+	Message  string
+}
+
+func (e *ErrorResponse) Error() string {
+	return fmt.Sprintf("%v %v: %d %v",
+		e.Response.Request.Method,
+		e.Response.Request.URL,
+		e.Response.StatusCode,
+		e.Message)
+}
+
+func checkResponse(r *http.Response) error {
+	if code := r.StatusCode; code >= 200 && code <= 299 {
+		return nil
+	}
+
+	return &ErrorResponse{Response: r}
+}

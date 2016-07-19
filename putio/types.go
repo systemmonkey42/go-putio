@@ -19,16 +19,20 @@ type File struct {
 	IsShared          bool   `json:"is_shared"`
 }
 
+// Upload represents a Put.io upload. If the uploaded file is a torrent file,
+// Transfer field will represent the status of the transfer.
 type Upload struct {
 	File     *File     `json:"file"`
 	Transfer *Transfer `json:"transfer"`
 }
 
+// Search represents a search response.
 type Search struct {
 	Files []File `json:"files"`
 	Next  string `json:"next"`
 }
 
+// Transfer represents a Put.io transfer state.
 type Transfer struct {
 	Availability       string  `json:"availability"`
 	CallbackURL        string  `json:"callback_url"`
@@ -67,6 +71,7 @@ type Transfer struct {
 	Uploaded           int     `json:"uploaded"`
 }
 
+// Info represents user's account information.
 type Info struct {
 	AccountActive           bool   `json:"account_active"`
 	AvatarURL               string `json:"avatar_url"`
@@ -88,6 +93,7 @@ type Info struct {
 	Username                  string   `json:"username"`
 }
 
+// Settings represents user's personal settings.
 type Settings struct {
 	CallbackURL             string      `json:"callback_url"`
 	DefaultDownloadFolder   int         `json:"default_download_folder"`
@@ -104,13 +110,14 @@ type Settings struct {
 	SubtitleLanguages       []string    `json:"subtitle_languages"`
 }
 
+// Friend represents Put.io user's friend.
 type Friend struct {
 	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatar_url"`
 }
 
-// FIXME: missing_files field is missin
+// Zip represents Put.io zip file.
 type Zip struct {
 	ID        int    `json:"id"`
 	CreatedAt string `json:"created_at"`
@@ -118,8 +125,12 @@ type Zip struct {
 	Size   int    `json:"size"`
 	Status string `json:"status"`
 	URL    string `json:"url"`
+
+	// FIXME: missing_files field is missin
+	MissingFiles string
 }
 
+// Subtitle represents a subtitle.
 type Subtitle struct {
 	Key      string
 	Language string
@@ -127,6 +138,7 @@ type Subtitle struct {
 	Source   string
 }
 
+// Event represents a Put.io event. It could be a transfer or a shared file.
 type Event struct {
 	ID           int    `json:"id"`
 	FileID       int    `json:"file_id"`

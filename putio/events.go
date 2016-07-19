@@ -2,11 +2,14 @@ package putio
 
 import "encoding/json"
 
+// EventsService is the service to gather information about user's events.
 type EventsService struct {
 	client *Client
 }
 
-func (e *EventsService) List() ([]Event, error) {
+// list gets list of dashboard events. It includes downloads and share events.
+// FIXME: events list returns inconsistent data structures.
+func (e *EventsService) list() ([]Event, error) {
 	req, err := e.client.NewRequest("GET", "/v2/events/list", nil)
 	if err != nil {
 		return nil, err
@@ -31,6 +34,7 @@ func (e *EventsService) List() ([]Event, error) {
 
 }
 
+// Delete Clears all all dashboard events.
 func (e *EventsService) Delete() error {
 	req, err := e.client.NewRequest("POST", "/v2/events/delete", nil)
 	if err != nil {
