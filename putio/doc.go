@@ -15,7 +15,7 @@
 // 		oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 // 		client := putio.NewClient(oauthClient)
 // 		// get root directory
-// 		root, err :=  client.Files.Get(0)
+// 		root, err := client.Files.Get(0)
 // 	}
 // Note that when using an authenticated Client, all calls made by the client will
 // include the specified OAuth token. Therefore, authenticated clients should
