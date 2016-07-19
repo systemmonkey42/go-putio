@@ -127,7 +127,7 @@ type Zip struct {
 	URL    string `json:"url"`
 
 	// FIXME: missing_files field is missin
-	MissingFiles string
+	missingFiles string
 }
 
 // Subtitle represents a subtitle.
