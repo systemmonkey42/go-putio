@@ -30,11 +30,11 @@ import (
 )
 
 func main() {
-    tokenSource := oauth2.StaticTokenSource( &oauth2.Token{AccessToken: "<YOUR-TOKEN-HERE>"})
+    tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "<YOUR-TOKEN-HERE>"})
     oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
     client := putio.NewClient(oauthClient)
-    root, err := client.Get(0)
+    root, err := client.Files.Get(0)
     if err != nil {
         log.Fatal(err)
     }
