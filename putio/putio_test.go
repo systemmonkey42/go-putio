@@ -44,3 +44,22 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("got: %v, want: %v", client.BaseURL.String(), defaultBaseURL)
 	}
 }
+
+func TestNewRequest_badURL(t *testing.T) {
+	c := NewClient(nil)
+	_, err := c.NewRequest("GET", ":", nil)
+	if err == nil {
+		t.Errorf("bad URL accepted")
+	}
+}
+
+func TestNewRequest_customUserAgent(t *testing.T) {
+	userAgent := "test"
+	c := NewClient(nil)
+	c.UserAgent = userAgent
+
+	req, _ := c.NewRequest("GET", "/test", nil)
+	if got := req.Header.Get("User-Agent"); got != userAgent {
+		t.Errorf("got: %v, want: %v", got, userAgent)
+	}
+}
