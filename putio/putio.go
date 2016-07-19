@@ -16,7 +16,6 @@ const (
 	defaultUploadURL = "https://upload.put.io"
 )
 
-// errors
 var (
 	ErrResourceNotFound = fmt.Errorf("resource does not exist")
 	ErrPaymentRequired  = fmt.Errorf("payment required")
