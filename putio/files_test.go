@@ -290,6 +290,20 @@ func TestFiles_Download(t *testing.T) {
 	fileContent := "0123456789"
 	mux.HandleFunc("/v2/files/1/download", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
+		notunnel := r.URL.Query().Get("notunnel")
+		if notunnel == "1" {
+			http.Redirect(w, r, "/valid-tunnel-server-download-url", http.StatusFound)
+		} else {
+			http.Redirect(w, r, "/valid-storage-server-download-url", http.StatusFound)
+		}
+	})
+	mux.HandleFunc("/valid-storage-server-download-url", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		buf := strings.NewReader(fileContent)
+		http.ServeContent(w, r, "testfile", time.Now().UTC(), buf)
+	})
+	mux.HandleFunc("/valid-tunnel-server-download-url", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
 		buf := strings.NewReader(fileContent)
 		http.ServeContent(w, r, "testfile", time.Now().UTC(), buf)
 	})
@@ -316,6 +330,22 @@ func TestFiles_Download(t *testing.T) {
 		t.Errorf("negative id accepted")
 	}
 
+	// tunneled download
+	rc, err = client.Files.Download(1, true, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	defer rc.Close()
+	buf.Reset()
+	_, err = io.Copy(&buf, rc)
+	if err != nil {
+		t.Error(err)
+	}
+	response := buf.String()
+	if response != fileContent {
+		t.Errorf("got: %v, want: %v", response, fileContent)
+	}
+
 	// range request
 	rangeHeader := http.Header{}
 	rangeHeader.Set("Range", fmt.Sprintf("bytes=%v-%v", 0, 3))
@@ -331,7 +361,7 @@ func TestFiles_Download(t *testing.T) {
 		t.Error(err)
 	}
 
-	response := buf.String()
+	response = buf.String()
 	if response != "0123" {
 		t.Errorf("got: %v, want: 0123", response)
 	}
