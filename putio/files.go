@@ -232,10 +232,10 @@ func (f *FilesService) Move(parent int, files ...int) error {
 // servers under the parent directory with the name filename. This method reads
 // the file contents into the memory, so it should be used for <150MB files.
 //
-// If the uploaded file is a torrent file, Put.io v2 API will interprete it as
-// a transfer and Transfer field will represent the status of the tranfer.
-// Likewise, if the uploaded file is a regular file, Transfer field would be
-// nil and the uploaded file will be represented by the File field.
+// If the uploaded file is a torrent file, Put.io v2 API will interpret it as
+// a transfer and Transfer field will be present to represent the status of the
+// tranfer.  Likewise, if the uploaded file is a regular file, Transfer field
+// would be nil and the uploaded file will be represented by the File field.
 func (f *FilesService) Upload(r io.Reader, filename string, parent int) (Upload, error) {
 	if parent < 0 {
 		return Upload{}, errNegativeID
