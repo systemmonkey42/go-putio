@@ -7,8 +7,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -230,35 +228,27 @@ func (f *FilesService) Move(parent int, files ...int) error {
 	return nil
 }
 
-// Upload reads from fpath and uploads the file contents to Put.io servers
-// under the parent directory with the name filename. This method reads the
-// file contents into the memory, so it should be used for <150MB files.
+// Upload reads from given io.Reader and uploads the file contents to Put.io
+// servers under the parent directory with the name filename. This method reads
+// the file contents into the memory, so it should be used for <150MB files.
 //
 // If the uploaded file is a torrent file, Put.io v2 API will interprete it as
 // a transfer and Transfer field will represent the status of the tranfer.
 // Likewise, if the uploaded file is a regular file, Transfer field would be
 // nil and the uploaded file will be represented by the File field.
-//
-// If filename is empty, basename of the fpath will be used.
-func (f *FilesService) Upload(fpath, filename string, parent int) (Upload, error) {
+func (f *FilesService) Upload(r io.Reader, filename string, parent int) (Upload, error) {
 	if parent < 0 {
 		return Upload{}, errNegativeID
 	}
 
 	if filename == "" {
-		filename = filepath.Base(fpath)
+		return Upload{}, fmt.Errorf("filename cannot be empty")
 	}
-
-	file, err := os.Open(fpath)
-	if err != nil {
-		return Upload{}, err
-	}
-	defer file.Close()
 
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 
-	err = mw.WriteField("parent_id", strconv.Itoa(parent))
+	err := mw.WriteField("parent_id", strconv.Itoa(parent))
 	if err != nil {
 		return Upload{}, err
 	}
@@ -268,7 +258,7 @@ func (f *FilesService) Upload(fpath, filename string, parent int) (Upload, error
 		return Upload{}, err
 	}
 
-	_, err = io.Copy(formfile, file)
+	_, err = io.Copy(formfile, r)
 	if err != nil {
 		return Upload{}, err
 	}
@@ -279,8 +269,11 @@ func (f *FilesService) Upload(fpath, filename string, parent int) (Upload, error
 	}
 
 	u, _ := url.Parse(defaultUploadURL)
-	// FIXME: revert to original baseurl
 	f.client.BaseURL = u
+	defer func() {
+		u, _ = url.Parse(defaultBaseURL)
+		f.client.BaseURL = u
+	}()
 
 	req, err := f.client.NewRequest("POST", "/v2/files/upload", &buf)
 	if err != nil {
@@ -288,14 +281,14 @@ func (f *FilesService) Upload(fpath, filename string, parent int) (Upload, error
 	}
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 
-	var r struct {
+	var response struct {
 		Upload
 	}
-	_, err = f.client.Do(req, &r)
+	_, err = f.client.Do(req, &response)
 	if err != nil {
 		return Upload{}, err
 	}
-	return r.Upload, nil
+	return response.Upload, nil
 }
 
 // Search makes a search request with the given query. Servers return 50
