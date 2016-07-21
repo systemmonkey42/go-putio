@@ -286,9 +286,9 @@ func (f *FilesService) Upload(r io.Reader, filename string, parent int) (Upload,
 
 // Search makes a search request with the given query. Servers return 50
 // results at a time. The URL for the next 50 results are in Next field.  If
-// page is negative, all results are returned.
+// page is -1, all results are returned.
 func (f *FilesService) Search(query string, page int) (Search, error) {
-	if page <= 0 {
+	if page == 0 || page < -1 {
 		return Search{}, fmt.Errorf("invalid page number")
 	}
 	if query == "" {
