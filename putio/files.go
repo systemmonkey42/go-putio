@@ -229,18 +229,17 @@ func (f *FilesService) Move(parent int, files ...int) error {
 }
 
 // Upload reads from given io.Reader and uploads the file contents to Put.io
-// servers under the parent directory with the name filename. This method reads
-// the file contents into the memory, so it should be used for <150MB files.
+// servers under directory given by parent. If parent is negative, user's
+// prefered folder is used.
 //
-// If the uploaded file is a torrent file, Put.io v2 API will interpret it as
-// a transfer and Transfer field will be present to represent the status of the
-// tranfer.  Likewise, if the uploaded file is a regular file, Transfer field
+// If the uploaded file is a torrent file, Put.io will interpret it as a
+// transfer and Transfer field will be present to represent the status of the
+// tranfer. Likewise, if the uploaded file is a regular file, Transfer field
 // would be nil and the uploaded file will be represented by the File field.
+//
+// This method reads the file contents into the memory, so it should be used for
+// <150MB files.
 func (f *FilesService) Upload(r io.Reader, filename string, parent int) (Upload, error) {
-	if parent < 0 {
-		return Upload{}, errNegativeID
-	}
-
 	if filename == "" {
 		return Upload{}, fmt.Errorf("filename cannot be empty")
 	}
@@ -248,9 +247,12 @@ func (f *FilesService) Upload(r io.Reader, filename string, parent int) (Upload,
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 
-	err := mw.WriteField("parent_id", strconv.Itoa(parent))
-	if err != nil {
-		return Upload{}, err
+	// negative parent means use user's prefered download folder.
+	if parent >= 0 {
+		err := mw.WriteField("parent_id", strconv.Itoa(parent))
+		if err != nil {
+			return Upload{}, err
+		}
 	}
 
 	formfile, err := mw.CreateFormFile("file", filename)
