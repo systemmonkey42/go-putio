@@ -32,6 +32,9 @@ type Client struct {
 	// Base URL for API requests
 	BaseURL *url.URL
 
+	// base url for upload requests
+	uploadURL *url.URL
+
 	// User agent for client
 	UserAgent string
 
@@ -53,9 +56,11 @@ func NewClient(httpClient *http.Client) *Client {
 	}
 
 	baseURL, _ := url.Parse(defaultBaseURL)
+	uploadURL, _ := url.Parse(defaultUploadURL)
 	c := &Client{
 		client:    httpClient,
 		BaseURL:   baseURL,
+		uploadURL: uploadURL,
 		UserAgent: defaultUserAgent,
 	}
 	c.Account = &AccountService{client: c}
@@ -76,7 +81,15 @@ func (c *Client) NewRequest(method, relURL string, body io.Reader) (*http.Reques
 		return nil, err
 	}
 
-	u := c.BaseURL.ResolveReference(rel)
+	var u *url.URL
+	// XXX: workaroud for upload endpoint. upload method has a different base url,
+	// so we've a special case for testing purposes.
+	if relURL == "/v2/files/upload" {
+		u = c.uploadURL.ResolveReference(rel)
+	} else {
+		u = c.BaseURL.ResolveReference(rel)
+	}
+
 	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
 		return nil, err

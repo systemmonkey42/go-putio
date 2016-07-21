@@ -268,13 +268,6 @@ func (f *FilesService) Upload(r io.Reader, filename string, parent int) (Upload,
 		return Upload{}, err
 	}
 
-	u, _ := url.Parse(defaultUploadURL)
-	f.client.BaseURL = u
-	defer func() {
-		u, _ = url.Parse(defaultBaseURL)
-		f.client.BaseURL = u
-	}()
-
 	req, err := f.client.NewRequest("POST", "/v2/files/upload", &buf)
 	if err != nil {
 		return Upload{}, err

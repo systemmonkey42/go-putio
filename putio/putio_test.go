@@ -20,6 +20,7 @@ func setup() {
 	client = NewClient(nil)
 	url, _ := url.Parse(server.URL)
 	client.BaseURL = url
+	client.uploadURL = url
 }
 
 func teardown() {
