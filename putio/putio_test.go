@@ -40,15 +40,15 @@ func testHeader(t *testing.T, r *http.Request, key, value string) {
 }
 
 func TestNewClient(t *testing.T) {
-	client = NewClient(nil)
+	client := NewClient(nil)
 	if client.BaseURL.String() != defaultBaseURL {
 		t.Errorf("got: %v, want: %v", client.BaseURL.String(), defaultBaseURL)
 	}
 }
 
 func TestNewRequest_badURL(t *testing.T) {
-	c := NewClient(nil)
-	_, err := c.NewRequest("GET", ":", nil)
+	client := NewClient(nil)
+	_, err := client.NewRequest("GET", ":", nil)
 	if err == nil {
 		t.Errorf("bad URL accepted")
 	}
@@ -56,10 +56,10 @@ func TestNewRequest_badURL(t *testing.T) {
 
 func TestNewRequest_customUserAgent(t *testing.T) {
 	userAgent := "test"
-	c := NewClient(nil)
-	c.UserAgent = userAgent
+	client := NewClient(nil)
+	client.UserAgent = userAgent
 
-	req, _ := c.NewRequest("GET", "/test", nil)
+	req, _ := client.NewRequest("GET", "/test", nil)
 	if got := req.Header.Get("User-Agent"); got != userAgent {
 		t.Errorf("got: %v, want: %v", got, userAgent)
 	}
