@@ -46,7 +46,7 @@ func (t *TransfersService) Add(urlStr string, parent int, callbackURL string) (T
 	// negative values indicate user's preferred download folder. don't include
 	// it in the request
 	if parent >= 0 {
-		params.Set("parent", strconv.Itoa(parent))
+		params.Set("save_parent_id", strconv.Itoa(parent))
 	}
 	if callbackURL != "" {
 		params.Set("callback_url", callbackURL)
