@@ -6,18 +6,18 @@ type AccountService struct {
 }
 
 // Info retrieves user account information.
-func (a *AccountService) Info() (Info, error) {
+func (a *AccountService) Info() (AccountInfo, error) {
 	req, err := a.client.NewRequest("GET", "/v2/account/info", nil)
 	if err != nil {
-		return Info{}, nil
+		return AccountInfo{}, nil
 	}
 
 	var r struct {
-		Info Info
+		Info AccountInfo
 	}
 	_, err = a.client.Do(req, &r)
 	if err != nil {
-		return Info{}, err
+		return AccountInfo{}, err
 	}
 	return r.Info, nil
 }

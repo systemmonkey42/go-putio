@@ -74,8 +74,8 @@ type Transfer struct {
 	Uploaded           int    `json:"uploaded"`
 }
 
-// Info represents user's account information.
-type Info struct {
+// AccountInfo represents user's account information.
+type AccountInfo struct {
 	AccountActive           bool   `json:"account_active"`
 	AvatarURL               string `json:"avatar_url"`
 	DaysUntilFilesDeletion  int    `json:"days_until_files_deletion"`
