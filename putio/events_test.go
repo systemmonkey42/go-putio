@@ -38,7 +38,7 @@ func TestEvents_List(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	events, err := client.Events.List()
+	events, err := client.Events.List(nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -62,7 +62,7 @@ func TestEvents_Delete(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Events.Delete()
+	err := client.Events.Delete(nil)
 	if err != nil {
 		t.Error(err)
 	}

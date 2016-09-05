@@ -1,13 +1,15 @@
 package putio
 
+import "context"
+
 // AccountService is the service to gather information about user account.
 type AccountService struct {
 	client *Client
 }
 
 // Info retrieves user account information.
-func (a *AccountService) Info() (AccountInfo, error) {
-	req, err := a.client.NewRequest("GET", "/v2/account/info", nil)
+func (a *AccountService) Info(ctx context.Context) (AccountInfo, error) {
+	req, err := a.client.NewRequest(ctx, "GET", "/v2/account/info", nil)
 	if err != nil {
 		return AccountInfo{}, nil
 	}
@@ -23,8 +25,8 @@ func (a *AccountService) Info() (AccountInfo, error) {
 }
 
 // Settings retrieves user preferences.
-func (a *AccountService) Settings() (Settings, error) {
-	req, err := a.client.NewRequest("GET", "/v2/account/settings", nil)
+func (a *AccountService) Settings(ctx context.Context) (Settings, error) {
+	req, err := a.client.NewRequest(ctx, "GET", "/v2/account/settings", nil)
 	if err != nil {
 		return Settings{}, nil
 	}

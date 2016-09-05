@@ -1,6 +1,9 @@
 package putio
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 // FriendsService is the service to operate on user friends.
 type FriendsService struct {
@@ -8,8 +11,8 @@ type FriendsService struct {
 }
 
 // List lists users friends.
-func (f *FriendsService) List() ([]Friend, error) {
-	req, err := f.client.NewRequest("GET", "/v2/friends/list", nil)
+func (f *FriendsService) List(ctx context.Context) ([]Friend, error) {
+	req, err := f.client.NewRequest(ctx, "GET", "/v2/friends/list", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -27,8 +30,8 @@ func (f *FriendsService) List() ([]Friend, error) {
 }
 
 // WaitingRequests lists user's pending friend requests.
-func (f *FriendsService) WaitingRequests() ([]Friend, error) {
-	req, err := f.client.NewRequest("GET", "/v2/friends/waiting-requests", nil)
+func (f *FriendsService) WaitingRequests(ctx context.Context) ([]Friend, error) {
+	req, err := f.client.NewRequest(ctx, "GET", "/v2/friends/waiting-requests", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +48,11 @@ func (f *FriendsService) WaitingRequests() ([]Friend, error) {
 }
 
 // Request sends a friend request to the given username.
-func (f *FriendsService) Request(username string) error {
+func (f *FriendsService) Request(ctx context.Context, username string) error {
 	if username == "" {
 		return fmt.Errorf("empty username")
 	}
-	req, err := f.client.NewRequest("POST", "/v2/friends/"+username+"/request", nil)
+	req, err := f.client.NewRequest(ctx, "POST", "/v2/friends/"+username+"/request", nil)
 	if err != nil {
 		return err
 	}
@@ -64,12 +67,12 @@ func (f *FriendsService) Request(username string) error {
 }
 
 // Approve approves a friend request from the given username.
-func (f *FriendsService) Approve(username string) error {
+func (f *FriendsService) Approve(ctx context.Context, username string) error {
 	if username == "" {
 		return fmt.Errorf("empty username")
 	}
 
-	req, err := f.client.NewRequest("POST", "/v2/friends/"+username+"/approve", nil)
+	req, err := f.client.NewRequest(ctx, "POST", "/v2/friends/"+username+"/approve", nil)
 	if err != nil {
 		return err
 	}
@@ -83,12 +86,12 @@ func (f *FriendsService) Approve(username string) error {
 }
 
 // Deny denies a friend request from the given username.
-func (f *FriendsService) Deny(username string) error {
+func (f *FriendsService) Deny(ctx context.Context, username string) error {
 	if username == "" {
 		return fmt.Errorf("empty username")
 	}
 
-	req, err := f.client.NewRequest("POST", "/v2/friends/"+username+"/deny", nil)
+	req, err := f.client.NewRequest(ctx, "POST", "/v2/friends/"+username+"/deny", nil)
 	if err != nil {
 		return err
 	}
@@ -102,12 +105,12 @@ func (f *FriendsService) Deny(username string) error {
 }
 
 // Unfriend removed friend from user's friend list.
-func (f *FriendsService) Unfriend(username string) error {
+func (f *FriendsService) Unfriend(ctx context.Context, username string) error {
 	if username == "" {
 		return fmt.Errorf("empty username")
 	}
 
-	req, err := f.client.NewRequest("POST", "/v2/friends/"+username+"/unfriend", nil)
+	req, err := f.client.NewRequest(ctx, "POST", "/v2/friends/"+username+"/unfriend", nil)
 	if err != nil {
 		return err
 	}

@@ -49,7 +49,7 @@ func TestFriends_List(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	friends, err := client.Friends.List()
+	friends, err := client.Friends.List(nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -94,7 +94,7 @@ func TestFriends_WaitingRequests(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	friends, err := client.Friends.WaitingRequests()
+	friends, err := client.Friends.WaitingRequests(nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -122,13 +122,13 @@ func TestFriends_Request(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Request("annie")
+	err := client.Friends.Request(nil, "annie")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Request("")
+	err = client.Friends.Request(nil, "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}
@@ -144,13 +144,13 @@ func TestFriends_Approve(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Approve("bob")
+	err := client.Friends.Approve(nil, "bob")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Approve("")
+	err = client.Friends.Approve(nil, "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}
@@ -166,13 +166,13 @@ func TestFriends_Deny(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Deny("andy")
+	err := client.Friends.Deny(nil, "andy")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Deny("")
+	err = client.Friends.Deny(nil, "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}
@@ -188,13 +188,13 @@ func TestFriends_Unfriend(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Unfriend("lin")
+	err := client.Friends.Unfriend(nil, "lin")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Unfriend("")
+	err = client.Friends.Unfriend(nil, "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}

@@ -1,6 +1,7 @@
 package putio
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -75,7 +76,7 @@ func NewClient(httpClient *http.Client) *Client {
 
 // NewRequest creates an API request. A relative URL can be provided via
 // relURL, which will be resolved to the BaseURL of the Client.
-func (c *Client) NewRequest(method, relURL string, body io.Reader) (*http.Request, error) {
+func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.Reader) (*http.Request, error) {
 	rel, err := url.Parse(relURL)
 	if err != nil {
 		return nil, err
@@ -94,6 +95,11 @@ func (c *Client) NewRequest(method, relURL string, body io.Reader) (*http.Reques
 	if err != nil {
 		return nil, err
 	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	req = req.WithContext(ctx)
 
 	req.Header.Set("Accept", defaultMediaType)
 	req.Header.Set("User-Agent", c.UserAgent)

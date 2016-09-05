@@ -23,7 +23,7 @@ func TestZips_Get(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	zip, err := client.Zips.Get(1)
+	zip, err := client.Zips.Get(nil, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -33,7 +33,7 @@ func TestZips_Get(t *testing.T) {
 	}
 
 	// negative id
-	_, err = client.Zips.Get(-1)
+	_, err = client.Zips.Get(nil, -1)
 	if err == nil {
 		t.Errorf("negative id accepted")
 	}
@@ -59,7 +59,7 @@ func TestZips_List(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	zips, err := client.Zips.List()
+	zips, err := client.Zips.List(nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +89,7 @@ func TestZips_Create(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	id, err := client.Zips.Create(666)
+	id, err := client.Zips.Create(nil, 666)
 	if err != nil {
 		t.Error(err)
 	}
@@ -99,12 +99,12 @@ func TestZips_Create(t *testing.T) {
 	}
 
 	// negative id
-	_, err = client.Zips.Create(1, 2, -1)
+	_, err = client.Zips.Create(nil, 1, 2, -1)
 	if err == nil {
 		t.Errorf("negative id accepted")
 	}
 
-	_, err = client.Zips.Create()
+	_, err = client.Zips.Create(nil)
 	if err == nil {
 		t.Errorf("empty params accepted")
 	}

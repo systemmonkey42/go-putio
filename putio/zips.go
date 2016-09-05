@@ -1,6 +1,7 @@
 package putio
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -13,12 +14,12 @@ type ZipsService struct {
 }
 
 // Get gives detailed information about the given zip file id.
-func (z *ZipsService) Get(id int) (Zip, error) {
+func (z *ZipsService) Get(ctx context.Context, id int) (Zip, error) {
 	if id < 0 {
 		return Zip{}, errNegativeID
 	}
 
-	req, err := z.client.NewRequest("GET", "/v2/zips/"+strconv.Itoa(id), nil)
+	req, err := z.client.NewRequest(ctx, "GET", "/v2/zips/"+strconv.Itoa(id), nil)
 	if err != nil {
 		return Zip{}, err
 	}
@@ -34,8 +35,8 @@ func (z *ZipsService) Get(id int) (Zip, error) {
 }
 
 // List lists active zip files.
-func (z *ZipsService) List() ([]Zip, error) {
-	req, err := z.client.NewRequest("GET", "/v2/zips/list", nil)
+func (z *ZipsService) List(ctx context.Context) ([]Zip, error) {
+	req, err := z.client.NewRequest(ctx, "GET", "/v2/zips/list", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (z *ZipsService) List() ([]Zip, error) {
 
 // Create creates zip files for given file IDs. If the operation is successful,
 // a zip ID will be returned to keep track of zip process.
-func (z *ZipsService) Create(fileIDs ...int) (int, error) {
+func (z *ZipsService) Create(ctx context.Context, fileIDs ...int) (int, error) {
 	if len(fileIDs) == 0 {
 		return 0, fmt.Errorf("no file id given")
 	}
@@ -69,7 +70,7 @@ func (z *ZipsService) Create(fileIDs ...int) (int, error) {
 	params := url.Values{}
 	params.Set("file_ids", strings.Join(ids, ","))
 
-	req, err := z.client.NewRequest("POST", "/v2/zips/create", strings.NewReader(params.Encode()))
+	req, err := z.client.NewRequest(ctx, "POST", "/v2/zips/create", strings.NewReader(params.Encode()))
 	if err != nil {
 		return 0, err
 	}
