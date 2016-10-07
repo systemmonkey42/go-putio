@@ -16,7 +16,8 @@ import (
 // such as listing, searching, creating new ones, or just fetching a single
 // file.
 type FilesService struct {
-	client *Client
+	client             *Client
+	redirectOnceClient *Client
 }
 
 // Get fetches file metadata for given file ID.
@@ -91,14 +92,9 @@ func (f *FilesService) Download(ctx context.Context, id int, useTunnel bool, hea
 		}
 	}
 
-	// follow the redirect only once. copy the original request headers to
-	// redirect request.
-	f.client.client.CheckRedirect = redirectOnceFunc
-	defer func() {
-		f.client.client.CheckRedirect = nil
-	}()
-
-	resp, err := f.client.Do(req, nil)
+	// Make the request with a custom http client, which follows the redirects
+	// only once. copy the original request headers to redirect request.
+	resp, err := f.redirectOnceClient.Do(req, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -64,8 +64,14 @@ func NewClient(httpClient *http.Client) *Client {
 		uploadURL: uploadURL,
 		UserAgent: defaultUserAgent,
 	}
+
+	// redirect once client. it's necessary to create a new client just for
+	// download operations.
+	roc := *c
+	roc.client.CheckRedirect = redirectOnceFunc
+
 	c.Account = &AccountService{client: c}
-	c.Files = &FilesService{client: c}
+	c.Files = &FilesService{client: c, redirectOnceClient: &roc}
 	c.Transfers = &TransfersService{client: c}
 	c.Zips = &ZipsService{client: c}
 	c.Friends = &FriendsService{client: c}
