@@ -92,8 +92,9 @@ func (f *FilesService) Download(ctx context.Context, id int, useTunnel bool, hea
 		}
 	}
 
-	// Make the request with a custom http client, which follows the redirects
-	// only once. copy the original request headers to redirect request.
+	// Download requests should not follow redirects since an HTTP redirect
+	// ignores original request headers. We want to preserve those headers
+	// (i.e. Range headers)
 	resp, err := f.redirectOnceClient.Do(req, nil)
 	if err != nil {
 		return nil, err
