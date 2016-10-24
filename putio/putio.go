@@ -17,12 +17,16 @@ const (
 	defaultUploadURL = "https://upload.put.io"
 )
 
-var (
-	ErrResourceNotFound = fmt.Errorf("resource does not exist")
-	ErrPaymentRequired  = fmt.Errorf("payment required")
+type Error string
 
-	errRedirect   = fmt.Errorf("redirect attempt on a no-redirect client")
-	errNegativeID = fmt.Errorf("file id cannot be negative")
+func (e Error) Error() string { return string(e) }
+
+const (
+	ErrResourceNotFound = Error("resource does not exist")
+	ErrPaymentRequired  = Error("payment required")
+
+	errRedirect   = Error("redirect attempt on a no-redirect client")
+	errNegativeID = Error("file id cannot be negative")
 )
 
 // Client manages communication with Put.io v2 API.
