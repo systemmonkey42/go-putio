@@ -19,6 +19,15 @@ type File struct {
 	IsShared          bool   `json:"is_shared"`
 }
 
+func (f *File) String() string {
+	return fmt.Sprintf("<ID: %v Name: %q Size: %v>", f.ID, f.Filename, f.Filesize)
+}
+
+// IsDir reports whether the file is a directory.
+func (f *File) IsDir() bool {
+	return f.ContentType == "application/x-directory"
+}
+
 // Upload represents a Put.io upload. If the uploaded file is a torrent file,
 // Transfer field will represent the status of the transfer.
 type Upload struct {
