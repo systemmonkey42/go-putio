@@ -4,13 +4,13 @@ import "fmt"
 
 // File represents a Put.io file.
 type File struct {
-	ID                int    `json:"id"`
+	ID                int64  `json:"id"`
 	Filename          string `json:"name"`
 	Filesize          int64  `json:"size"`
 	ContentType       string `json:"content_type"`
 	CreatedAt         *Time  `json:"created_at"`
 	FirstAccessedAt   *Time  `json:"first_accessed_at"`
-	ParentID          int    `json:"parent_id"`
+	ParentID          int64  `json:"parent_id"`
 	Screenshot        string `json:"screenshot"`
 	OpensubtitlesHash string `json:"opensubtitles_hash"`
 	IsMP4Available    bool   `json:"is_mp4_available"`
@@ -53,14 +53,14 @@ type Transfer struct {
 	// CurrentRatio       float32 `json:"current_ratio"`
 
 	DownloadSpeed      int    `json:"down_speed"`
-	Downloaded         int    `json:"downloaded"`
-	DownloadID         int    `json:"download_id"`
+	Downloaded         int64  `json:"downloaded"`
+	DownloadID         int64  `json:"download_id"`
 	ErrorMessage       string `json:"error_message"`
 	EstimatedTime      string `json:"estimated_time"`
 	Extract            bool   `json:"extract"`
-	FileID             int    `json:"file_id"`
+	FileID             int64  `json:"file_id"`
 	FinishedAt         *Time  `json:"finished_at"`
-	ID                 int    `json:"id"`
+	ID                 int64  `json:"id"`
 	IsPrivate          bool   `json:"is_private"`
 	MagnetURI          string `json:"magneturi"`
 	Name               string `json:"name"`
@@ -68,7 +68,7 @@ type Transfer struct {
 	PeersGettingFromUs int    `json:"peers_getting_from_us"`
 	PeersSendingToUs   int    `json:"peers_sending_to_us"`
 	PercentDone        int    `json:"percent_done"`
-	SaveParentID       int    `json:"save_parent_id"`
+	SaveParentID       int64  `json:"save_parent_id"`
 	SecondsSeeding     int    `json:"seconds_seeding"`
 	Size               int    `json:"size"`
 	Source             string `json:"source"`
@@ -80,7 +80,7 @@ type Transfer struct {
 	Trackers           string `json:"tracker"`
 	Type               string `json:"type"`
 	UploadSpeed        int    `json:"up_speed"`
-	Uploaded           int    `json:"uploaded"`
+	Uploaded           int64  `json:"uploaded"`
 }
 
 // AccountInfo represents user's account information.
@@ -90,9 +90,9 @@ type AccountInfo struct {
 	DaysUntilFilesDeletion  int    `json:"days_until_files_deletion"`
 	DefaultSubtitleLanguage string `json:"default_subtitle_language"`
 	Disk                    struct {
-		Avail int `json:"avail"`
-		Size  int `json:"size"`
-		Used  int `json:"used"`
+		Avail int64 `json:"avail"`
+		Size  int64 `json:"size"`
+		Used  int64 `json:"used"`
 	} `json:"disk"`
 	HasVoucher                int      `json:"has_voucher"`
 	Mail                      string   `json:"mail"`
@@ -101,14 +101,14 @@ type AccountInfo struct {
 	Settings                  Settings `json:"settings"`
 	SimultaneousDownloadLimit int      `json:"simultaneous_download_limit"`
 	SubtitleLanguages         []string `json:"subtitle_languages"`
-	UserID                    int      `json:"user_id"`
+	UserID                    int64    `json:"user_id"`
 	Username                  string   `json:"username"`
 }
 
 // Settings represents user's personal settings.
 type Settings struct {
 	CallbackURL             string      `json:"callback_url"`
-	DefaultDownloadFolder   int         `json:"default_download_folder"`
+	DefaultDownloadFolder   int64       `json:"default_download_folder"`
 	DefaultSubtitleLanguage string      `json:"default_subtitle_language"`
 	DownloadFolderUnset     bool        `json:"download_folder_unset"`
 	IsInvisible             bool        `json:"is_invisible"`
@@ -124,17 +124,17 @@ type Settings struct {
 
 // Friend represents Put.io user's friend.
 type Friend struct {
-	ID        int    `json:"id"`
+	ID        int64  `json:"id"`
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatar_url"`
 }
 
 // Zip represents Put.io zip file.
 type Zip struct {
-	ID        int   `json:"id"`
+	ID        int64 `json:"id"`
 	CreatedAt *Time `json:"created_at"`
 
-	Size   int    `json:"size"`
+	Size   int64  `json:"size"`
 	Status string `json:"status"`
 	URL    string `json:"url"`
 
@@ -152,20 +152,20 @@ type Subtitle struct {
 
 // Event represents a Put.io event. It could be a transfer or a shared file.
 type Event struct {
-	ID           int    `json:"id"`
-	FileID       int    `json:"file_id"`
+	ID           int64  `json:"id"`
+	FileID       int64  `json:"file_id"`
 	Source       string `json:"source"`
 	Type         string `json:"type"`
 	TransferName string `json:"transfer_name"`
-	TransferSize int    `json:"transfer_size"`
+	TransferSize int64  `json:"transfer_size"`
 	CreatedAt    *Time  `json:"created_at"`
 }
 
 type share struct {
-	FileID   int    `json:"file_id"`
+	FileID   int64  `json:"file_id"`
 	Filename string `json:"file_name"`
 	// Number of friends the file is shared with
-	SharedWith int `json:"shared_with"`
+	SharedWith int64 `json:"shared_with"`
 }
 
 // errorResponse represents a common error message that Put.io v2 API sends on
