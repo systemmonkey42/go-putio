@@ -633,25 +633,25 @@ func TestFiles_Share(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Files.share(nil, []int{1, 2, 3}, "friend0", "friend1", "friend2")
+	err := client.Files.share(nil, []int64{1, 2, 3}, "friend0", "friend1", "friend2")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// negative file id
-	err = client.Files.share(nil, []int{-1, 1, 2}, "friend0")
+	err = client.Files.share(nil, []int64{-1, 1, 2}, "friend0")
 	if err == nil {
 		t.Errorf("negative file id accepted")
 	}
 
 	// no file id given
-	err = client.Files.share(nil, []int{}, "friend0")
+	err = client.Files.share(nil, []int64{}, "friend0")
 	if err == nil {
 		t.Errorf("no files given and accepted")
 	}
 
 	// case: everyone (given no friends share the files to every friend)
-	err = client.Files.share(nil, []int{1})
+	err = client.Files.share(nil, []int64{1})
 	if err != nil {
 		t.Error(err)
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -37,7 +36,7 @@ func (t *TransfersService) List(ctx context.Context) ([]Transfer, error) {
 // Parent is the folder where the new transfer is downloaded to. If a negative
 // value is given, user's preferred download folder is used. CallbackURL is
 // used to send a POST request after the transfer is finished downloading.
-func (t *TransfersService) Add(ctx context.Context, urlStr string, parent int, callbackURL string) (Transfer, error) {
+func (t *TransfersService) Add(ctx context.Context, urlStr string, parent int64, callbackURL string) (Transfer, error) {
 	if urlStr == "" {
 		return Transfer{}, fmt.Errorf("empty URL")
 	}
@@ -47,7 +46,7 @@ func (t *TransfersService) Add(ctx context.Context, urlStr string, parent int, c
 	// negative values indicate user's preferred download folder. don't include
 	// it in the request
 	if parent >= 0 {
-		params.Set("save_parent_id", strconv.Itoa(parent))
+		params.Set("save_parent_id", itoa(parent))
 	}
 	if callbackURL != "" {
 		params.Set("callback_url", callbackURL)
@@ -71,12 +70,12 @@ func (t *TransfersService) Add(ctx context.Context, urlStr string, parent int, c
 }
 
 // Get returns the given transfer's properties.
-func (t *TransfersService) Get(ctx context.Context, id int) (Transfer, error) {
+func (t *TransfersService) Get(ctx context.Context, id int64) (Transfer, error) {
 	if id < 0 {
 		return Transfer{}, errNegativeID
 	}
 
-	req, err := t.client.NewRequest(ctx, "GET", "/v2/transfers/"+strconv.Itoa(id), nil)
+	req, err := t.client.NewRequest(ctx, "GET", "/v2/transfers/"+itoa(id), nil)
 	if err != nil {
 		return Transfer{}, err
 	}
@@ -93,13 +92,13 @@ func (t *TransfersService) Get(ctx context.Context, id int) (Transfer, error) {
 }
 
 // Retry retries previously failed transfer.
-func (t *TransfersService) Retry(ctx context.Context, id int) (Transfer, error) {
+func (t *TransfersService) Retry(ctx context.Context, id int64) (Transfer, error) {
 	if id < 0 {
 		return Transfer{}, errNegativeID
 	}
 
 	params := url.Values{}
-	params.Set("id", strconv.Itoa(id))
+	params.Set("id", itoa(id))
 
 	req, err := t.client.NewRequest(ctx, "POST", "/v2/transfers/retry", strings.NewReader(params.Encode()))
 	if err != nil {
@@ -119,7 +118,7 @@ func (t *TransfersService) Retry(ctx context.Context, id int) (Transfer, error) 
 }
 
 // Cancel deletes given transfers.
-func (t *TransfersService) Cancel(ctx context.Context, ids ...int) error {
+func (t *TransfersService) Cancel(ctx context.Context, ids ...int64) error {
 	if len(ids) == 0 {
 		return fmt.Errorf("no id given")
 	}
@@ -129,7 +128,7 @@ func (t *TransfersService) Cancel(ctx context.Context, ids ...int) error {
 		if id < 0 {
 			return errNegativeID
 		}
-		transfers = append(transfers, strconv.Itoa(id))
+		transfers = append(transfers, itoa(id))
 	}
 
 	params := url.Values{}

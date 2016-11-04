@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -14,12 +13,12 @@ type ZipsService struct {
 }
 
 // Get gives detailed information about the given zip file id.
-func (z *ZipsService) Get(ctx context.Context, id int) (Zip, error) {
+func (z *ZipsService) Get(ctx context.Context, id int64) (Zip, error) {
 	if id < 0 {
 		return Zip{}, errNegativeID
 	}
 
-	req, err := z.client.NewRequest(ctx, "GET", "/v2/zips/"+strconv.Itoa(id), nil)
+	req, err := z.client.NewRequest(ctx, "GET", "/v2/zips/"+itoa(id), nil)
 	if err != nil {
 		return Zip{}, err
 	}
@@ -54,7 +53,7 @@ func (z *ZipsService) List(ctx context.Context) ([]Zip, error) {
 
 // Create creates zip files for given file IDs. If the operation is successful,
 // a zip ID will be returned to keep track of zip process.
-func (z *ZipsService) Create(ctx context.Context, fileIDs ...int) (int, error) {
+func (z *ZipsService) Create(ctx context.Context, fileIDs ...int64) (int64, error) {
 	if len(fileIDs) == 0 {
 		return 0, fmt.Errorf("no file id given")
 	}
@@ -64,7 +63,7 @@ func (z *ZipsService) Create(ctx context.Context, fileIDs ...int) (int, error) {
 		if id < 0 {
 			return 0, errNegativeID
 		}
-		ids = append(ids, strconv.Itoa(id))
+		ids = append(ids, itoa(id))
 	}
 
 	params := url.Values{}
@@ -77,7 +76,7 @@ func (z *ZipsService) Create(ctx context.Context, fileIDs ...int) (int, error) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	var r struct {
-		ID int `json:"zip_id"`
+		ID int64 `json:"zip_id"`
 	}
 	_, err = z.client.Do(req, &r)
 	if err != nil {
