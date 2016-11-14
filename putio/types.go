@@ -43,7 +43,7 @@ type Search struct {
 
 // Transfer represents a Put.io transfer state.
 type Transfer struct {
-	Availability   string `json:"availability"`
+	Availability   int    `json:"availability"`
 	CallbackURL    string `json:"callback_url"`
 	CreatedAt      *Time  `json:"created_at"`
 	CreatedTorrent bool   `json:"created_torrent"`
