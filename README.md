@@ -30,7 +30,9 @@ func main() {
     oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
     client := putio.NewClient(oauthClient)
-    root, err := client.Files.Get(0)
+
+    const rootDir = 0
+    root, err := client.Files.Get(rootDir)
     if err != nil {
         log.Fatal(err)
     }
