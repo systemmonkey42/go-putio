@@ -20,6 +20,7 @@ package main
 import (
         "fmt"
         "log"
+        "context"
 
         "golang.org/x/oauth2"
         "github.com/igungor/go-putio/putio"
@@ -32,7 +33,7 @@ func main() {
     client := putio.NewClient(oauthClient)
 
     const rootDir = 0
-    root, err := client.Files.Get(rootDir)
+    root, err := client.Files.Get(context.Background(), rootDir)
     if err != nil {
         log.Fatal(err)
     }
