@@ -46,8 +46,8 @@ func TestFiles_Get(t *testing.T) {
 		t.Error(err)
 	}
 
-	if file.Filesize != 92 {
-		t.Errorf("got: %v, want: 92", file.Filesize)
+	if file.Size != 92 {
+		t.Errorf("got: %v, want: 92", file.Size)
 	}
 
 	// negative id
@@ -197,8 +197,8 @@ func TestFiles_CreateFolder(t *testing.T) {
 		t.Error(err)
 	}
 
-	if file.Filename != "foobar" {
-		t.Errorf("got: %v, want: foobar", file.Filename)
+	if file.Name != "foobar" {
+		t.Errorf("got: %v, want: foobar", file.Name)
 	}
 
 	// empty folder name
@@ -500,8 +500,8 @@ func TestFiles_Search(t *testing.T) {
 		t.Errorf("got: %v, want: 3", len(s.Files))
 	}
 
-	if s.Files[0].Filename != "some-file.mkv" {
-		t.Errorf("got: %v, want: some-file.mkv", s.Files[0].Filename)
+	if s.Files[0].Name != "some-file.mkv" {
+		t.Errorf("got: %v, want: some-file.mkv", s.Files[0].Name)
 	}
 
 	// invalid page number

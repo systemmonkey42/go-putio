@@ -5,8 +5,8 @@ import "fmt"
 // File represents a Put.io file.
 type File struct {
 	ID                int64  `json:"id"`
-	Filename          string `json:"name"`
-	Filesize          int64  `json:"size"`
+	Name              string `json:"name"`
+	Size              int64  `json:"size"`
 	ContentType       string `json:"content_type"`
 	CreatedAt         *Time  `json:"created_at"`
 	FirstAccessedAt   *Time  `json:"first_accessed_at"`
@@ -20,7 +20,7 @@ type File struct {
 }
 
 func (f *File) String() string {
-	return fmt.Sprintf("<ID: %v Name: %q Size: %v>", f.ID, f.Filename, f.Filesize)
+	return fmt.Sprintf("<ID: %v Name: %q Size: %v>", f.ID, f.Name, f.Size)
 }
 
 // IsDir reports whether the file is a directory.
