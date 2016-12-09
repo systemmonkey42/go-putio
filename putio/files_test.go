@@ -329,7 +329,7 @@ func TestFiles_Download(t *testing.T) {
 		http.ServeContent(w, r, "testfile", time.Now().UTC(), buf)
 	})
 
-	paymentRequiredHandler := func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v2/files/2/download", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		errorBody := `
 {
@@ -342,8 +342,14 @@ func TestFiles_Download(t *testing.T) {
 		w.WriteHeader(http.StatusPaymentRequired)
 		fmt.Fprintln(w, errorBody)
 		return
-	}
-	mux.HandleFunc("/v2/files/2/download", paymentRequiredHandler)
+	})
+
+	mux.HandleFunc("/v2/files/666/download", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		errorBody := `<DOCTYPE some kind of garbare HTML file...`
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, errorBody)
+	})
 
 	rc, err := client.Files.Download(nil, 1, false, nil)
 	if err != nil {
@@ -409,6 +415,12 @@ func TestFiles_Download(t *testing.T) {
 	_, err = client.Files.Download(nil, 2, false, nil)
 	if err != ErrPaymentRequired {
 		t.Errorf("payment-required error should be returned")
+	}
+
+	// invalid grant
+	_, err = client.Files.Download(nil, 666, false, nil)
+	if err != ErrUnauthorized {
+		t.Errorf("invalid-grant test failed. got:%v want: %v", err, ErrUnauthorized)
 	}
 }
 
