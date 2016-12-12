@@ -214,7 +214,7 @@ func checkResponse(r *http.Response) error {
 		err = json.Unmarshal(data, errorResponse)
 		if err != nil {
 			// unexpected error
-			return fmt.Errorf("unexpected error from API\n%v\n", string(data[:250]))
+			return fmt.Errorf("unexpected HTTP status: %v. Details: %v:", statusCode, string(data[:250]))
 		}
 	}
 	return errorResponse
