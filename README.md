@@ -9,7 +9,7 @@ the documentation is available on [godoc](http://godoc.org/github.com/igungor/go
 ## install
 
 ```sh
-go get github.com/igungor/go-putio/putio"
+go get -u github.com/igungor/go-putio/putio"
 ```
 
 ## usage
