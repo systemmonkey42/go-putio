@@ -44,6 +44,9 @@ type Client struct {
 	// User agent for client
 	UserAgent string
 
+	// ExtraHeaders are passed to the API server on every request.
+	ExtraHeaders http.Header
+
 	// Services used for communicating with the API
 	Account   *AccountService
 	Files     *FilesService
@@ -64,10 +67,11 @@ func NewClient(httpClient *http.Client) *Client {
 	baseURL, _ := url.Parse(defaultBaseURL)
 	uploadURL, _ := url.Parse(defaultUploadURL)
 	c := &Client{
-		client:    httpClient,
-		BaseURL:   baseURL,
-		uploadURL: uploadURL,
-		UserAgent: defaultUserAgent,
+		client:       httpClient,
+		BaseURL:      baseURL,
+		uploadURL:    uploadURL,
+		UserAgent:    defaultUserAgent,
+		ExtraHeaders: make(http.Header),
 	}
 
 	// redirect once client. it's necessary to create a new client just for
@@ -114,6 +118,13 @@ func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.
 
 	req.Header.Set("Accept", defaultMediaType)
 	req.Header.Set("User-Agent", c.UserAgent)
+
+	// merge headers with extra headers
+	for header, values := range c.ExtraHeaders {
+		for _, value := range values {
+			req.Header.Add(header, value)
+		}
+	}
 
 	return req, nil
 }
