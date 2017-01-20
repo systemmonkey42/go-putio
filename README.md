@@ -1,18 +1,18 @@
-# putio  [![Build Status](https://travis-ci.org/igungor/go-putio.svg?branch=master)](https://travis-ci.org/igungor/go-putio)
+# putio  [![Build Status](https://travis-ci.org/putdotio/go-putio.svg?branch=master)](https://travis-ci.org/putdotio/go-putio)
 
-putio is a Go client library for accessing the Put.io v2 API.
+putio is a Go client library for accessing the [Put.io API v2](https://api.put.io/v2/docs).
 
-## documentation
+## Documentation
 
-the documentation is available on [godoc](http://godoc.org/github.com/igungor/go-putio/putio).
+Available on [GoDoc](http://godoc.org/github.com/putdotio/go-putio/putio)
 
-## install
+## Install
 
 ```sh
-go get -u github.com/igungor/go-putio/putio"
+go get -u github.com/putdotio/go-putio/putio"
 ```
 
-## usage
+## Usage
 
 ```go
 package main
@@ -23,11 +23,12 @@ import (
         "context"
 
         "golang.org/x/oauth2"
-        "github.com/igungor/go-putio/putio"
+        "github.com/putdotio/go-putio/putio"
 )
 
 func main() {
-    tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "<YOUR-TOKEN-HERE>"})
+    oauthToken := "<YOUR-TOKEN-HERE>"
+    tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: oauthToken})
     oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
     client := putio.NewClient(oauthClient)
