@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -63,17 +62,10 @@ func (f *FilesService) List(ctx context.Context, id int64) ([]File, File, error)
 	return r.Files, r.Parent, nil
 }
 
-// Download fetches the contents of the given file. Callers can pass additional
-// useTunnel parameter to fetch the file from nearest tunnel server. Storage
-// servers accept Range requests, so a range header can be provided by headers
-// parameter.
-//
-// Download request is done by the client which is provided to the NewClient
-// constructor. Additional client tunings are taken into consideration while
-// downloading a file, such as Timeout etc.
-func (f *FilesService) Download(ctx context.Context, id int64, useTunnel bool, headers http.Header) (io.ReadCloser, error) {
+// URL returns a URL of the file for downloading or streaming.
+func (f *FilesService) URL(ctx context.Context, id int64, useTunnel bool) (string, error) {
 	if id < 0 {
-		return nil, errNegativeID
+		return "", errNegativeID
 	}
 
 	notunnel := "notunnel=1"
@@ -81,26 +73,21 @@ func (f *FilesService) Download(ctx context.Context, id int64, useTunnel bool, h
 		notunnel = "notunnel=0"
 	}
 
-	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/"+itoa(id)+"/download?"+notunnel, nil)
+	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/"+itoa(id)+"/url?"+notunnel, nil)
 	if err != nil {
-		return nil, err
-	}
-	// merge headers with request headers
-	for header, values := range headers {
-		for _, value := range values {
-			req.Header.Add(header, value)
-		}
+		return "", err
 	}
 
-	// Download requests should not follow redirects since an HTTP redirect
-	// ignores original request headers. We want to preserve those headers
-	// (i.e. Range headers)
-	resp, err := f.redirectOnceClient.Do(req, nil)
-	if err != nil {
-		return nil, err
+	var r struct {
+		URL string `json:"url"`
 	}
 
-	return resp.Body, nil
+	_, err = f.client.Do(req, &r)
+	if err != nil {
+		return "", err
+	}
+
+	return r.URL, nil
 }
 
 // CreateFolder creates a new folder under parent.
