@@ -74,13 +74,8 @@ func NewClient(httpClient *http.Client) *Client {
 		ExtraHeaders: make(http.Header),
 	}
 
-	// redirect once client. it's necessary to create a new client just for
-	// download operations.
-	roc := *c
-	roc.client.CheckRedirect = redirectOnceFunc
-
 	c.Account = &AccountService{client: c}
-	c.Files = &FilesService{client: c, redirectOnceClient: &roc}
+	c.Files = &FilesService{client: c}
 	c.Transfers = &TransfersService{client: c}
 	c.Zips = &ZipsService{client: c}
 	c.Friends = &FriendsService{client: c}
@@ -160,26 +155,6 @@ func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
 	}
 
 	return resp, nil
-}
-
-// redirectOnceFunc follows the redirect only once, and copies the original
-// request headers to the new one.
-func redirectOnceFunc(req *http.Request, via []*http.Request) error {
-	if len(via) == 0 {
-		return nil
-	}
-
-	if len(via) > 1 {
-		return errRedirect
-	}
-
-	// merge headers with request headers
-	for header, values := range via[0].Header {
-		for _, value := range values {
-			req.Header.Add(header, value)
-		}
-	}
-	return nil
 }
 
 // ErrorResponse reports the error caused by an API request.

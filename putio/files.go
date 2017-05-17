@@ -15,8 +15,7 @@ import (
 // such as listing, searching, creating new ones, or just fetching a single
 // file.
 type FilesService struct {
-	client             *Client
-	redirectOnceClient *Client
+	client *Client
 }
 
 // Get fetches file metadata for given file ID.
