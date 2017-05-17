@@ -22,7 +22,7 @@ func TestAccount_Info(t *testing.T) {
 			"size": 2147483648000,
 			"used": 1431508631864
 		},
-		"has_voucher": 0,
+		"has_voucher": false,
 		"mail": "naber@iyidir.com",
 		"plan_expiration_date": "2020-01-01T00:00:00",
 		"settings": {
