@@ -3,6 +3,7 @@ package putio
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,16 +18,12 @@ const (
 	defaultUploadURL = "https://upload.put.io"
 )
 
-type Error string
+var (
+	ErrResourceNotFound = errors.New("resource does not exist")
+	ErrPaymentRequired  = errors.New("payment required")
+	ErrUnauthorized     = errors.New("invalid grant")
 
-func (e Error) Error() string { return string(e) }
-
-const (
-	ErrResourceNotFound = Error("resource does not exist")
-	ErrPaymentRequired  = Error("payment required")
-	ErrUnauthorized     = Error("invalid grant")
-
-	errNegativeID = Error("file id cannot be negative")
+	errNegativeID = errors.New("file id cannot be negative")
 )
 
 // Client manages communication with Put.io v2 API.
