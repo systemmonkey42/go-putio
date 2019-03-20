@@ -71,6 +71,18 @@ func NewClient(httpClient *http.Client) *Client {
 	return c
 }
 
+func (c *Client) ValidateToken(ctx context.Context) (ok bool, err error) {
+	req, err := c.NewRequest(ctx, "GET", "/v2/oauth2/validate", nil)
+	if err != nil {
+		return
+	}
+	var r struct {
+		Result bool `json:"result"`
+	}
+	_, err = c.Do(req, &r)
+	return r.Result, err
+}
+
 // NewRequest creates an API request. A relative URL can be provided via
 // relURL, which will be resolved to the BaseURL of the Client.
 func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.Reader) (*http.Request, error) {
