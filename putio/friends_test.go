@@ -1,6 +1,7 @@
 package putio
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -49,7 +50,7 @@ func TestFriends_List(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	friends, err := client.Friends.List(nil)
+	friends, err := client.Friends.List(context.Background())
 	if err != nil {
 		t.Error(err)
 	}
@@ -94,7 +95,7 @@ func TestFriends_WaitingRequests(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	friends, err := client.Friends.WaitingRequests(nil)
+	friends, err := client.Friends.WaitingRequests(context.Background())
 	if err != nil {
 		t.Error(err)
 	}
@@ -122,13 +123,13 @@ func TestFriends_Request(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Request(nil, "annie")
+	err := client.Friends.Request(context.Background(), "annie")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Request(nil, "")
+	err = client.Friends.Request(context.Background(), "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}
@@ -144,13 +145,13 @@ func TestFriends_Approve(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Approve(nil, "bob")
+	err := client.Friends.Approve(context.Background(), "bob")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Approve(nil, "")
+	err = client.Friends.Approve(context.Background(), "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}
@@ -166,13 +167,13 @@ func TestFriends_Deny(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Deny(nil, "andy")
+	err := client.Friends.Deny(context.Background(), "andy")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Deny(nil, "")
+	err = client.Friends.Deny(context.Background(), "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}
@@ -188,13 +189,13 @@ func TestFriends_Unfriend(t *testing.T) {
 		fmt.Fprintln(w, `{"status":"OK"}`)
 	})
 
-	err := client.Friends.Unfriend(nil, "lin")
+	err := client.Friends.Unfriend(context.Background(), "lin")
 	if err != nil {
 		t.Error(err)
 	}
 
 	// empty username
-	err = client.Friends.Unfriend(nil, "")
+	err = client.Friends.Unfriend(context.Background(), "")
 	if err == nil {
 		t.Error("empty username accepted")
 	}

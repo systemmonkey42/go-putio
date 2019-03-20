@@ -26,7 +26,6 @@ const (
 	ErrPaymentRequired  = Error("payment required")
 	ErrUnauthorized     = Error("invalid grant")
 
-	errRedirect   = Error("redirect attempt on a no-redirect client")
 	errNegativeID = Error("file id cannot be negative")
 )
 

@@ -295,65 +295,6 @@ func (f *FilesService) Search(ctx context.Context, query string, page int64) (Se
 	return r, nil
 }
 
-// FIXME: is it worth to export this method?
-func (f *FilesService) convert(ctx context.Context, id int64) error {
-	if id < 0 {
-		return errNegativeID
-	}
-
-	req, err := f.client.NewRequest(ctx, "POST", "/v2/files/"+itoa(id)+"/mp4", nil)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.client.Do(req, &struct{}{})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Share shares given files with given friends. Friends are list of usernames.
-// If no friends is given, files are shared with all of your friends.
-func (f *FilesService) share(ctx context.Context, files []int64, friends ...string) error {
-	if len(files) == 0 {
-		return fmt.Errorf("no files given")
-	}
-
-	var ids []string
-	for _, file := range files {
-		if file < 0 {
-			return errNegativeID
-		}
-		ids = append(ids, itoa(file))
-	}
-
-	var friendsParam string
-	if len(friends) == 0 {
-		friendsParam = "everyone"
-	} else {
-		friendsParam = strings.Join(friends, ",")
-	}
-
-	params := url.Values{}
-	params.Set("file_ids", strings.Join(ids, ","))
-	params.Set("friends", friendsParam)
-
-	req, err := f.client.NewRequest(ctx, "POST", "/v2/files/share", strings.NewReader(params.Encode()))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	_, err = f.client.Do(req, &struct{}{})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Shared returns list of shared files and share information.
 func (f *FilesService) shared(ctx context.Context) ([]share, error) {
 	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/shared", nil)

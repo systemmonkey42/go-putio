@@ -136,9 +136,6 @@ type Zip struct {
 	Size   int64  `json:"size"`
 	Status string `json:"status"`
 	URL    string `json:"url"`
-
-	// FIXME: missing_files field is missin
-	missingFiles string
 }
 
 // Subtitle represents a subtitle.
@@ -165,18 +162,4 @@ type share struct {
 	Filename string `json:"file_name"`
 	// Number of friends the file is shared with
 	SharedWith int64 `json:"shared_with"`
-}
-
-// errorResponse represents a common error message that Put.io v2 API sends on
-// error.
-type errorResponse struct {
-	ErrorMessage string `json:"error_message"`
-	ErrorType    string `json:"error_type"`
-	ErrorURI     string `json:"error_uri"`
-	Status       string `json:"status"`
-	StatusCode   int    `json:"status_code"`
-}
-
-func (e errorResponse) Error() string {
-	return fmt.Sprintf("StatusCode: %v ErrorType: %v ErrorMsg: %v", e.StatusCode, e.ErrorType, e.ErrorMessage)
 }

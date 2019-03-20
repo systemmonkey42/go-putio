@@ -1,6 +1,7 @@
 package putio
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -23,7 +24,7 @@ func TestZips_Get(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	zip, err := client.Zips.Get(nil, 1)
+	zip, err := client.Zips.Get(context.Background(), 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -33,7 +34,7 @@ func TestZips_Get(t *testing.T) {
 	}
 
 	// negative id
-	_, err = client.Zips.Get(nil, -1)
+	_, err = client.Zips.Get(context.Background(), -1)
 	if err == nil {
 		t.Errorf("negative id accepted")
 	}
@@ -59,7 +60,7 @@ func TestZips_List(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	zips, err := client.Zips.List(nil)
+	zips, err := client.Zips.List(context.Background())
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +90,7 @@ func TestZips_Create(t *testing.T) {
 		fmt.Fprintln(w, fixture)
 	})
 
-	id, err := client.Zips.Create(nil, 666)
+	id, err := client.Zips.Create(context.Background(), 666)
 	if err != nil {
 		t.Error(err)
 	}
@@ -99,12 +100,12 @@ func TestZips_Create(t *testing.T) {
 	}
 
 	// negative id
-	_, err = client.Zips.Create(nil, 1, 2, -1)
+	_, err = client.Zips.Create(context.Background(), 1, 2, -1)
 	if err == nil {
 		t.Errorf("negative id accepted")
 	}
 
-	_, err = client.Zips.Create(nil)
+	_, err = client.Zips.Create(context.Background())
 	if err == nil {
 		t.Errorf("empty params accepted")
 	}
