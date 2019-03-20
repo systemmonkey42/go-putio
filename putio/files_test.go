@@ -53,8 +53,11 @@ func TestFiles_Get(t *testing.T) {
 
 	// non-existent file
 	_, err = client.Files.Get(context.Background(), 2)
-	if err != ErrResourceNotFound {
-		t.Errorf("got: %v, want: %v", err, ErrResourceNotFound)
+	if err == nil {
+		t.Fatal("must not return nil")
+	}
+	if err, ok := err.(*ErrorResponse); ok && err.Response.StatusCode != 404 {
+		t.Errorf("error: %s, excepted: 404", err)
 	}
 }
 
@@ -141,8 +144,11 @@ func TestFiles_List(t *testing.T) {
 
 	// non-existent parent folder
 	_, _, err = client.Files.List(context.Background(), 2)
-	if err != ErrResourceNotFound {
-		t.Errorf("got: %v, want: %v", err, ErrResourceNotFound)
+	if err == nil {
+		t.Fatal("must not return nil")
+	}
+	if err, ok := err.(*ErrorResponse); ok && err.Response.StatusCode != 404 {
+		t.Errorf("error: %s, excepted: 404", err)
 	}
 }
 

@@ -316,8 +316,11 @@ func TestTransfers_Retry(t *testing.T) {
 
 	// non-existent tranfer iD
 	_, err = client.Transfers.Retry(context.Background(), 2)
-	if err != ErrResourceNotFound {
-		t.Errorf("got: %v, want: %v", err, ErrResourceNotFound)
+	if err == nil {
+		t.Fatal("must not return nil")
+	}
+	if err, ok := err.(*ErrorResponse); ok && err.Response.StatusCode != 404 {
+		t.Errorf("error: %s, excepted: 404", err)
 	}
 }
 
@@ -370,8 +373,11 @@ func TestTransfers_Cancel(t *testing.T) {
 
 	// non-existent transfer
 	err = client.Transfers.Cancel(context.Background(), 1, 2, 3, 4)
-	if err != ErrResourceNotFound {
-		t.Errorf("got: %v, want: %v", err, ErrResourceNotFound)
+	if err == nil {
+		t.Fatal("must not return nil")
+	}
+	if err, ok := err.(*ErrorResponse); ok && err.Response.StatusCode != 404 {
+		t.Errorf("error: %s, excepted: 404", err)
 	}
 }
 

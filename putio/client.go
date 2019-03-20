@@ -148,27 +148,24 @@ func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
 // status code is not in success range, it will try to return a structured
 // error.
 func checkResponse(r *http.Response) error {
-	statusCode := r.StatusCode
-	if statusCode >= 200 && statusCode <= 299 {
+	status := r.StatusCode
+	switch {
+	case status >= 200 && status <= 399:
 		return nil
+	case status >= 400 && status <= 599:
+		// server returns json
+	default:
+		return fmt.Errorf("unexpected status code: %d", status)
 	}
-
-	switch statusCode {
-	case http.StatusNotFound:
-		return ErrResourceNotFound
-	case http.StatusPaymentRequired:
-		return ErrPaymentRequired
-	case http.StatusUnauthorized:
-		return ErrUnauthorized
-	}
-
 	errorResponse := &ErrorResponse{Response: r}
 	data, err := ioutil.ReadAll(r.Body)
-	if err == nil && len(data) > 0 {
+	if err != nil {
+		return fmt.Errorf("body read error: %s. status: %v. Details: %v:", err, status, string(data[:250]))
+	}
+	if len(data) > 0 {
 		err = json.Unmarshal(data, errorResponse)
 		if err != nil {
-			// unexpected error
-			return fmt.Errorf("unexpected HTTP status: %v. Details: %v:", statusCode, string(data[:250]))
+			return fmt.Errorf("json decod error: %s. status: %v. Details: %v:", err, status, string(data[:250]))
 		}
 	}
 	return errorResponse

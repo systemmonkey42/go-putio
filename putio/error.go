@@ -1,15 +1,8 @@
 package putio
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-)
-
-var (
-	ErrResourceNotFound = errors.New("resource does not exist")
-	ErrPaymentRequired  = errors.New("payment required")
-	ErrUnauthorized     = errors.New("invalid grant")
 )
 
 // ErrorResponse reports the error caused by an API request.
