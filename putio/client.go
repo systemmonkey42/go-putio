@@ -105,11 +105,7 @@ func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.
 		return nil, err
 	}
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	req = req.WithContext(ctx)
-
 	req.Header.Set("Accept", defaultMediaType)
 	req.Header.Set("User-Agent", c.UserAgent)
 
