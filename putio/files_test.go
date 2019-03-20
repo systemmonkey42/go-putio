@@ -51,12 +51,6 @@ func TestFiles_Get(t *testing.T) {
 		t.Errorf("got: %v, want: 92", file.Size)
 	}
 
-	// negative id
-	_, err = client.Files.Get(context.Background(), -1)
-	if err == nil {
-		t.Errorf("negative id accepted")
-	}
-
 	// non-existent file
 	_, err = client.Files.Get(context.Background(), 2)
 	if err != ErrResourceNotFound {
@@ -145,12 +139,6 @@ func TestFiles_List(t *testing.T) {
 		t.Errorf("got: %v, want: 123", parent.ID)
 	}
 
-	// negative id
-	_, _, err = client.Files.List(context.Background(), -1)
-	if err == nil {
-		t.Errorf("negative id accepted")
-	}
-
 	// non-existent parent folder
 	_, _, err = client.Files.List(context.Background(), 2)
 	if err != ErrResourceNotFound {
@@ -207,12 +195,6 @@ func TestFiles_CreateFolder(t *testing.T) {
 	if err == nil {
 		t.Errorf("empty folder name accepted")
 	}
-
-	// negative id
-	_, err = client.Files.CreateFolder(context.Background(), "foobar", -1)
-	if err == nil {
-		t.Errorf("negative id accepted")
-	}
 }
 
 func TestFiles_Delete(t *testing.T) {
@@ -235,11 +217,6 @@ func TestFiles_Delete(t *testing.T) {
 	if err == nil {
 		t.Errorf("empty parameters accepted")
 	}
-
-	err = client.Files.Delete(context.Background(), 1, 2, -1)
-	if err == nil {
-		t.Errorf("negative id accepted")
-	}
 }
 
 func TestFiles_Rename(t *testing.T) {
@@ -255,12 +232,6 @@ func TestFiles_Rename(t *testing.T) {
 	err := client.Files.Rename(context.Background(), 1, "bar")
 	if err != nil {
 		t.Error(err)
-	}
-
-	// negative id
-	err = client.Files.Rename(context.Background(), -1, "bar")
-	if err == nil {
-		t.Errorf("negative file ID accepted")
 	}
 
 	// empty name
@@ -284,18 +255,6 @@ func TestFiles_Move(t *testing.T) {
 	err := client.Files.Move(context.Background(), 0, 1, 2, 3, 4, 5)
 	if err != nil {
 		t.Error(err)
-	}
-
-	// negative parent id
-	err = client.Files.Move(context.Background(), -1, 1, 2, 3, 4, 5)
-	if err == nil {
-		t.Errorf("negative parent ID accepted")
-	}
-
-	// negative file id
-	err = client.Files.Move(context.Background(), 0, 1, 2, -3)
-	if err == nil {
-		t.Errorf("negative file ID accepted")
 	}
 
 	// no files
@@ -423,12 +382,6 @@ func TestFiles_SetVideoPosition(t *testing.T) {
 	err := client.Files.SetVideoPosition(context.Background(), 1, 10)
 	if err != nil {
 		t.Error(err)
-	}
-
-	// negative id
-	err = client.Files.SetVideoPosition(context.Background(), -1, 10)
-	if err == nil {
-		t.Errorf("negative file id accepted")
 	}
 
 	// negative time

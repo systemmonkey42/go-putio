@@ -14,10 +14,6 @@ type ZipsService struct {
 
 // Get gives detailed information about the given zip file id.
 func (z *ZipsService) Get(ctx context.Context, id int64) (Zip, error) {
-	if id < 0 {
-		return Zip{}, errNegativeID
-	}
-
 	req, err := z.client.NewRequest(ctx, "GET", "/v2/zips/"+itoa(id), nil)
 	if err != nil {
 		return Zip{}, err
@@ -60,9 +56,6 @@ func (z *ZipsService) Create(ctx context.Context, fileIDs ...int64) (int64, erro
 
 	var ids []string
 	for _, id := range fileIDs {
-		if id < 0 {
-			return 0, errNegativeID
-		}
 		ids = append(ids, itoa(id))
 	}
 

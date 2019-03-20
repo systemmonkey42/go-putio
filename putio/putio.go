@@ -22,8 +22,6 @@ var (
 	ErrResourceNotFound = errors.New("resource does not exist")
 	ErrPaymentRequired  = errors.New("payment required")
 	ErrUnauthorized     = errors.New("invalid grant")
-
-	errNegativeID = errors.New("file id cannot be negative")
 )
 
 // Client manages communication with Put.io v2 API.

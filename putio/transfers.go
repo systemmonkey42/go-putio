@@ -71,10 +71,6 @@ func (t *TransfersService) Add(ctx context.Context, urlStr string, parent int64,
 
 // Get returns the given transfer's properties.
 func (t *TransfersService) Get(ctx context.Context, id int64) (Transfer, error) {
-	if id < 0 {
-		return Transfer{}, errNegativeID
-	}
-
 	req, err := t.client.NewRequest(ctx, "GET", "/v2/transfers/"+itoa(id), nil)
 	if err != nil {
 		return Transfer{}, err
@@ -93,10 +89,6 @@ func (t *TransfersService) Get(ctx context.Context, id int64) (Transfer, error) 
 
 // Retry retries previously failed transfer.
 func (t *TransfersService) Retry(ctx context.Context, id int64) (Transfer, error) {
-	if id < 0 {
-		return Transfer{}, errNegativeID
-	}
-
 	params := url.Values{}
 	params.Set("id", itoa(id))
 
@@ -125,9 +117,6 @@ func (t *TransfersService) Cancel(ctx context.Context, ids ...int64) error {
 
 	var transfers []string
 	for _, id := range ids {
-		if id < 0 {
-			return errNegativeID
-		}
 		transfers = append(transfers, itoa(id))
 	}
 

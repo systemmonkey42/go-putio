@@ -20,10 +20,6 @@ type FilesService struct {
 
 // Get fetches file metadata for given file ID.
 func (f *FilesService) Get(ctx context.Context, id int64) (File, error) {
-	if id < 0 {
-		return File{}, errNegativeID
-	}
-
 	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/"+itoa(id), nil)
 	if err != nil {
 		return File{}, err
@@ -41,9 +37,6 @@ func (f *FilesService) Get(ctx context.Context, id int64) (File, error) {
 
 // List fetches children for given directory ID.
 func (f *FilesService) List(ctx context.Context, id int64) ([]File, File, error) {
-	if id < 0 {
-		return nil, File{}, errNegativeID
-	}
 	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/list?parent_id="+itoa(id), nil)
 	if err != nil {
 		return nil, File{}, err
@@ -63,10 +56,6 @@ func (f *FilesService) List(ctx context.Context, id int64) ([]File, File, error)
 
 // URL returns a URL of the file for downloading or streaming.
 func (f *FilesService) URL(ctx context.Context, id int64, useTunnel bool) (string, error) {
-	if id < 0 {
-		return "", errNegativeID
-	}
-
 	notunnel := "notunnel=1"
 	if useTunnel {
 		notunnel = "notunnel=0"
@@ -93,10 +82,6 @@ func (f *FilesService) URL(ctx context.Context, id int64, useTunnel bool) (strin
 func (f *FilesService) CreateFolder(ctx context.Context, name string, parent int64) (File, error) {
 	if name == "" {
 		return File{}, fmt.Errorf("empty folder name")
-	}
-
-	if parent < 0 {
-		return File{}, errNegativeID
 	}
 
 	params := url.Values{}
@@ -128,9 +113,6 @@ func (f *FilesService) Delete(ctx context.Context, files ...int64) error {
 
 	var ids []string
 	for _, id := range files {
-		if id < 0 {
-			return errNegativeID
-		}
 		ids = append(ids, itoa(id))
 	}
 
@@ -152,9 +134,6 @@ func (f *FilesService) Delete(ctx context.Context, files ...int64) error {
 
 // Rename change the name of the file to newname.
 func (f *FilesService) Rename(ctx context.Context, id int64, newname string) error {
-	if id < 0 {
-		return errNegativeID
-	}
 	if newname == "" {
 		return fmt.Errorf("new filename cannot be empty")
 	}
@@ -179,19 +158,12 @@ func (f *FilesService) Rename(ctx context.Context, id int64, newname string) err
 
 // Move moves files to the given destination.
 func (f *FilesService) Move(ctx context.Context, parent int64, files ...int64) error {
-	if parent < 0 {
-		return errNegativeID
-	}
-
 	if len(files) == 0 {
 		return fmt.Errorf("no files given")
 	}
 
 	var ids []string
 	for _, file := range files {
-		if file < 0 {
-			return errNegativeID
-		}
 		ids = append(ids, itoa(file))
 	}
 
@@ -315,10 +287,6 @@ func (f *FilesService) shared(ctx context.Context) ([]share, error) {
 
 // SharedWith returns list of users the given file is shared with.
 func (f *FilesService) sharedWith(ctx context.Context, id int64) ([]share, error) {
-	if id < 0 {
-		return nil, errNegativeID
-	}
-
 	// FIXME: shared-with returns different json structure than /shared/
 	// endpoint. so it's not an exported method until a common structure is
 	// decided
@@ -341,10 +309,6 @@ func (f *FilesService) sharedWith(ctx context.Context, id int64) ([]share, error
 // Subtitles lists available subtitles for the given file for user's prefered
 // subtitle language.
 func (f *FilesService) Subtitles(ctx context.Context, id int64) ([]Subtitle, error) {
-	if id < 0 {
-		return nil, errNegativeID
-	}
-
 	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/"+itoa(id)+"/subtitles", nil)
 	if err != nil {
 		return nil, err
@@ -369,10 +333,6 @@ func (f *FilesService) Subtitles(ctx context.Context, id int64) ([]Subtitle, err
 // - Subtitle file extracted from video if the format is MKV.
 // - First match from OpenSubtitles.org.
 func (f *FilesService) DownloadSubtitle(ctx context.Context, id int64, key string, format string) (io.ReadCloser, error) {
-	if id < 0 {
-		return nil, errNegativeID
-	}
-
 	if key == "" {
 		key = "default"
 	}
@@ -392,10 +352,6 @@ func (f *FilesService) DownloadSubtitle(ctx context.Context, id int64, key strin
 // HLSPlaylist serves a HLS playlist for a video file. Use “all” as
 // subtitleKey to get available subtitles for user’s preferred languages.
 func (f *FilesService) HLSPlaylist(ctx context.Context, id int64, subtitleKey string) (io.ReadCloser, error) {
-	if id < 0 {
-		return nil, errNegativeID
-	}
-
 	if subtitleKey == "" {
 		return nil, fmt.Errorf("empty subtitle key is given")
 	}
@@ -415,10 +371,6 @@ func (f *FilesService) HLSPlaylist(ctx context.Context, id int64, subtitleKey st
 
 // SetVideoPosition sets default video position for a video file.
 func (f *FilesService) SetVideoPosition(ctx context.Context, id int64, t int) error {
-	if id < 0 {
-		return errNegativeID
-	}
-
 	if t < 0 {
 		return fmt.Errorf("time cannot be negative")
 	}
@@ -442,10 +394,6 @@ func (f *FilesService) SetVideoPosition(ctx context.Context, id int64, t int) er
 
 // DeleteVideoPosition deletes video position for a video file.
 func (f *FilesService) DeleteVideoPosition(ctx context.Context, id int64) error {
-	if id < 0 {
-		return errNegativeID
-	}
-
 	req, err := f.client.NewRequest(ctx, "POST", "/v2/files/"+itoa(id)+"/start-from/delete", nil)
 	if err != nil {
 		return err

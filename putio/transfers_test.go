@@ -68,12 +68,6 @@ func TestTransfers_Get(t *testing.T) {
 	if transfer.ID != 1 {
 		t.Errorf("got: %v, want: 1", transfer.ID)
 	}
-
-	// negative id
-	_, err = client.Transfers.Get(context.Background(), -1)
-	if err == nil {
-		t.Errorf("negative id accepted")
-	}
 }
 
 func TestTransfers_List(t *testing.T) {
@@ -320,12 +314,6 @@ func TestTransfers_Retry(t *testing.T) {
 		t.Errorf("got: %v, want: %v", transfer.ID, 1)
 	}
 
-	// negative transfer ID
-	_, err = client.Transfers.Retry(context.Background(), -1)
-	if err == nil {
-		t.Errorf("negative transfer ID accepted")
-	}
-
 	// non-existent tranfer iD
 	_, err = client.Transfers.Retry(context.Background(), 2)
 	if err != ErrResourceNotFound {
@@ -378,12 +366,6 @@ func TestTransfers_Cancel(t *testing.T) {
 	err = client.Transfers.Cancel(context.Background())
 	if err == nil {
 		t.Errorf("no parameters given and accepted")
-	}
-
-	// negative id
-	err = client.Transfers.Cancel(context.Background(), 1, 2, -1)
-	if err == nil {
-		t.Errorf("negative id accepted")
 	}
 
 	// non-existent transfer
