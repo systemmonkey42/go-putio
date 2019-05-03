@@ -36,22 +36,38 @@ func (f *FilesService) Get(ctx context.Context, id int64) (File, error) {
 }
 
 // List fetches children for given directory ID.
-func (f *FilesService) List(ctx context.Context, id int64) ([]File, File, error) {
-	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/list?parent_id="+itoa(id), nil)
+func (f *FilesService) List(ctx context.Context, id int64) (children []File, parent File, err error) {
+	req, err := f.client.NewRequest(ctx, "GET", "/v2/files/list?parent_id="+itoa(id)+"&per_page=1000", nil)
 	if err != nil {
-		return nil, File{}, err
+		return
 	}
-
 	var r struct {
 		Files  []File `json:"files"`
 		Parent File   `json:"parent"`
+		Cursor string `json:"cursor"`
 	}
 	_, err = f.client.Do(req, &r)
 	if err != nil {
-		return nil, File{}, err
+		return
 	}
-
-	return r.Files, r.Parent, nil
+	children = append(children, r.Files...)
+	parent = r.Parent
+	for r.Cursor != "" {
+		body := strings.NewReader(`{"cursor": "` + r.Cursor + `"}`)
+		req, err = f.client.NewRequest(ctx, "POST", "/v2/files/list/continue", body)
+		if err != nil {
+			return
+		}
+		req.Header.Set("content-type", "application/json")
+		r.Files = nil
+		r.Cursor = ""
+		_, err = f.client.Do(req, &r)
+		if err != nil {
+			return
+		}
+		children = append(children, r.Files...)
+	}
+	return
 }
 
 // URL returns a URL of the file for downloading or streaming.
