@@ -9,6 +9,7 @@ type File struct {
 	Size              int64  `json:"size"`
 	ContentType       string `json:"content_type"`
 	CreatedAt         *Time  `json:"created_at"`
+	UpdatedAt         *Time  `json:"updated_at"`
 	FirstAccessedAt   *Time  `json:"first_accessed_at"`
 	ParentID          int64  `json:"parent_id"`
 	Screenshot        string `json:"screenshot"`
