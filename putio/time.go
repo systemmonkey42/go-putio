@@ -23,7 +23,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	var err error
 	var tm time.Time
 	for _, layout := range timeLayouts {
-		tm, err = time.Parse(layout, s)
+		tm, err = time.ParseInLocation(layout, s, time.UTC)
 		if err == nil {
 			t.Time = tm
 			return nil
