@@ -232,7 +232,7 @@ func TestTransfers_Add(t *testing.T) {
 		t.Errorf("empty URL accepted")
 	}
 
-	// negative parent folder means use the user's prefered download folder.
+	// negative parent folder means use the user's preferred download folder.
 	_, err = client.Transfers.Add(context.Background(), "filepath", -1, "")
 	if err != nil {
 		t.Error(err)

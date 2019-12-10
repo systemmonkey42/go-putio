@@ -78,7 +78,8 @@ func (c *Client) ValidateToken(ctx context.Context) (userID *int64, err error) {
 	var r struct {
 		UserID *int64 `json:"user_id"`
 	}
-	_, err = c.Do(req, &r)
+	resp, err := c.Do(req, &r)
+	defer resp.Body.Close()
 	return r.UserID, err
 }
 
