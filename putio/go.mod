@@ -1,3 +1,3 @@
-module github.com/putdotio/go-putio/putio
+module github.com/putdotio/go-putio
 
 go 1.13
