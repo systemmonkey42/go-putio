@@ -30,6 +30,9 @@ type Client struct {
 	// User agent for client
 	UserAgent string
 
+	// Override host header for API requests
+	Host string
+
 	// ExtraHeaders are passed to the API server on every request.
 	ExtraHeaders http.Header
 
@@ -108,6 +111,10 @@ func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.
 	req = req.WithContext(ctx)
 	req.Header.Set("Accept", defaultMediaType)
 	req.Header.Set("User-Agent", c.UserAgent)
+
+	if c.Host != "" {
+		req.Host = c.Host
+	}
 
 	// merge headers with extra headers
 	for header, values := range c.ExtraHeaders {
