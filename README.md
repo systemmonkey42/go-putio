@@ -4,12 +4,12 @@ putio is a Go client library for accessing the [Put.io API v2](https://api.put.i
 
 ## Documentation
 
-Available on [GoDoc](http://godoc.org/github.com/putdotio/go-putio/putio)
+Available on [GoDoc](http://godoc.org/github.com/putdotio/go-putio)
 
 ## Install
 
 ```sh
-go get -u github.com/putdotio/go-putio/putio"
+go get -u github.com/putdotio/go-putio"
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ import (
         "context"
 
         "golang.org/x/oauth2"
-        "github.com/putdotio/go-putio/putio"
+        "github.com/putdotio/go-putio"
 )
 
 func main() {
