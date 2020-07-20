@@ -81,9 +81,11 @@ func (c *Client) ValidateToken(ctx context.Context) (userID *int64, err error) {
 	var r struct {
 		UserID *int64 `json:"user_id"`
 	}
-	resp, err := c.Do(req, &r)
-	defer resp.Body.Close()
-	return r.UserID, err
+	_, err = c.Do(req, &r)
+	if err != nil {
+		return nil, err
+	}
+	return r.UserID, nil
 }
 
 // NewRequest creates an API request. A relative URL can be provided via
