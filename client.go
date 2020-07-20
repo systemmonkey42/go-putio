@@ -43,6 +43,7 @@ type Client struct {
 	Zips      *ZipsService
 	Friends   *FriendsService
 	Events    *EventsService
+	Config    *ConfigService
 }
 
 // NewClient returns a new Put.io API client, using the htttpClient, which must
@@ -69,6 +70,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Zips = &ZipsService{client: c}
 	c.Friends = &FriendsService{client: c}
 	c.Events = &EventsService{client: c}
+	c.Config = &ConfigService{client: c}
 
 	return c
 }
