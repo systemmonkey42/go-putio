@@ -29,15 +29,15 @@ import (
 func main() {
     oauthToken := "<YOUR-TOKEN-HERE>"
     tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: oauthToken})
-    oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+    oauthClient := oauth2.NewClient(context.TODO(), tokenSource)
 
     client := putio.NewClient(oauthClient)
 
     const rootDir = 0
-    root, err := client.Files.Get(context.Background(), rootDir)
+    root, err := client.Files.Get(context.TODO(), rootDir)
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println(root.Filename)
+    fmt.Println(root.Name)
 }
 ```
