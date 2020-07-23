@@ -26,19 +26,22 @@ func (f *ConfigService) GetAll(ctx context.Context, config interface{}) error {
 	return json.Unmarshal(r.Config, &config)
 }
 
-func (f *ConfigService) Get(ctx context.Context, key string, value interface{}) error {
+func (f *ConfigService) Get(ctx context.Context, key string, value interface{}) (found bool, err error) {
 	req, err := f.client.NewRequest(ctx, http.MethodGet, "/v2/config/"+key, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	var r struct {
-		Value json.RawMessage `json:"value"`
+		Value *json.RawMessage `json:"value"`
 	}
 	_, err = f.client.Do(req, &r)
 	if err != nil {
-		return err
+		return false, err
 	}
-	return json.Unmarshal(r.Value, &value)
+	if r.Value == nil {
+		return false, nil
+	}
+	return true, json.Unmarshal(*r.Value, &value)
 }
 
 func (f *ConfigService) SetAll(ctx context.Context, config interface{}) error {
