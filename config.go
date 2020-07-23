@@ -11,43 +11,45 @@ type ConfigService struct {
 	client *Client
 }
 
-func (f *ConfigService) GetAll(ctx context.Context) (map[string]interface{}, error) {
+func (f *ConfigService) GetAll(ctx context.Context, config interface{}) error {
 	req, err := f.client.NewRequest(ctx, http.MethodGet, "/v2/config", nil)
 	if err != nil {
-		return nil, err
-	}
-	var r = struct {
-		Config map[string]interface{} `json:"config"`
-	}{
-		Config: make(map[string]interface{}),
-	}
-	_, err = f.client.Do(req, &r)
-	if err != nil {
-		return nil, err
-	}
-	return r.Config, nil
-}
-
-func (f *ConfigService) Get(ctx context.Context, key string) (interface{}, error) {
-	req, err := f.client.NewRequest(ctx, http.MethodGet, "/v2/config/"+key, nil)
-	if err != nil {
-		return nil, err
+		return err
 	}
 	var r struct {
-		Value interface{} `json:"value"`
+		Config json.RawMessage `json:"config"`
 	}
 	_, err = f.client.Do(req, &r)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return r.Value, nil
+	return json.Unmarshal(r.Config, &config)
 }
 
-func (f *ConfigService) SetAll(ctx context.Context, config map[string]interface{}) error {
+func (f *ConfigService) Get(ctx context.Context, key string, value interface{}) error {
+	req, err := f.client.NewRequest(ctx, http.MethodGet, "/v2/config/"+key, nil)
+	if err != nil {
+		return err
+	}
+	var r struct {
+		Value json.RawMessage `json:"value"`
+	}
+	_, err = f.client.Do(req, &r)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(r.Value, &value)
+}
+
+func (f *ConfigService) SetAll(ctx context.Context, config interface{}) error {
+	b, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
 	v := struct {
-		Config interface{} `json:"config"`
+		Config json.RawMessage `json:"config"`
 	}{
-		Config: config,
+		Config: b,
 	}
 	body, err := json.Marshal(v)
 	if err != nil {
@@ -63,10 +65,14 @@ func (f *ConfigService) SetAll(ctx context.Context, config map[string]interface{
 }
 
 func (f *ConfigService) Set(ctx context.Context, key string, value interface{}) error {
+	b, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
 	v := struct {
-		Value interface{} `json:"value"`
+		Value json.RawMessage `json:"value"`
 	}{
-		Value: value,
+		Value: b,
 	}
 	body, err := json.Marshal(v)
 	if err != nil {
