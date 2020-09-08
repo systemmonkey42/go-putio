@@ -209,8 +209,8 @@ func (f *FilesService) Move(ctx context.Context, parent int64, files ...int64) e
 // tranfer. Likewise, if the uploaded file is a regular file, Transfer field
 // would be nil and the uploaded file will be represented by the File field.
 //
-// This method reads the file contents into the memory, so it should be used for
-// <150MB files.
+// This method reads the file contents into the memory, so it should only be used for small files.
+// Use Uploader for larger files.
 func (f *FilesService) Upload(ctx context.Context, r io.Reader, filename string, parent int64) (Upload, error) {
 	if filename == "" {
 		return Upload{}, fmt.Errorf("filename cannot be empty")
