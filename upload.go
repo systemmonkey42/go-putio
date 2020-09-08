@@ -11,38 +11,24 @@ import (
 	"time"
 )
 
-const uploadURL = "https://upload.put.io/files/"
-
-// Uploader uses TUS upload protocol for sending files to put.io.
-type Uploader struct {
-	client  *http.Client
-	timeout time.Duration
-	token   string
-
+// UploadService uses TUS (resumable upload protocol) for sending files to put.io.
+type UploadService struct {
+	// Log is a user supplied function to collect log messages from upload methods.
 	Log func(message string)
+
+	client *Client
 }
 
-// NewUploader returns a new Uploader for given http.Client and request timeout.
-func NewUploader(client *http.Client, timeout time.Duration, token string) *Uploader {
-	return &Uploader{
-		client:  client,
-		timeout: timeout,
-		token:   token,
-	}
-}
-
-func (u *Uploader) log(message string) {
+func (u *UploadService) log(message string) {
 	if u.Log != nil {
 		u.Log(message)
 	}
 }
 
 // CreateUpload is used for beginning new upload. Use returned location in SendFile function.
-func (u *Uploader) CreateUpload(ctx context.Context, filename string, parentID, length int64) (location string, err error) {
+func (u *UploadService) CreateUpload(ctx context.Context, filename string, parentID, length int64) (location string, err error) {
 	u.log(fmt.Sprintf("Creating upload %q at parent=%d", filename, parentID))
-	ctx, cancel := context.WithTimeout(ctx, u.timeout)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uploadURL, nil)
+	req, err := u.client.NewRequest(ctx, http.MethodPost, "$upload-tus$", nil)
 	if err != nil {
 		return
 	}
@@ -54,9 +40,8 @@ func (u *Uploader) CreateUpload(ctx context.Context, filename string, parentID, 
 	req.Header.Set("Content-Length", "0")
 	req.Header.Set("Upload-Length", strconv.FormatInt(length, 10))
 	req.Header.Set("Upload-Metadata", encodeMetadata(metadata))
-	req.Header.Set("Authorization", "token "+u.token)
 
-	resp, err := u.client.Do(req)
+	resp, err := u.client.client.Do(req)
 	if err != nil {
 		return
 	}
@@ -74,7 +59,7 @@ func (u *Uploader) CreateUpload(ctx context.Context, filename string, parentID, 
 // SendFile sends the contents of the file to put.io.
 // In case of an transmission error, you can resume upload but you have to get the correct offset from server by
 // calling GetOffset and must seek to the new offset on io.Reader.
-func (u *Uploader) SendFile(ctx context.Context, r io.Reader, location string, offset int64) (fileID int64, crc32 string, err error) {
+func (u *UploadService) SendFile(ctx context.Context, r io.Reader, location string, offset int64, timeout time.Duration) (fileID int64, crc32 string, err error) {
 	u.log(fmt.Sprintf("Sending file %q offset=%d", location, offset))
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -82,17 +67,16 @@ func (u *Uploader) SendFile(ctx context.Context, r io.Reader, location string, o
 
 	// Stop upload if speed is too slow.
 	// Wrap reader so each read call resets the timer that cancels the request on certain duration.
-	r = &timerResetReader{r: r, timer: time.AfterFunc(u.timeout, cancel), timeout: u.timeout}
+	r = &timerResetReader{r: r, timer: time.AfterFunc(timeout, cancel), timeout: timeout}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, location, r)
+	req, err := u.client.NewRequest(ctx, http.MethodPatch, location, r)
 	if err != nil {
 		return
 	}
 
 	req.Header.Set("content-type", "application/offset+octet-stream")
 	req.Header.Set("upload-offset", strconv.FormatInt(offset, 10))
-	req.Header.Set("Authorization", "token "+u.token)
-	resp, err := u.client.Do(req)
+	resp, err := u.client.client.Do(req)
 	if err != nil {
 		return
 	}
@@ -113,17 +97,14 @@ func (u *Uploader) SendFile(ctx context.Context, r io.Reader, location string, o
 }
 
 // GetOffset returns the offset at the server.
-func (u *Uploader) GetOffset(ctx context.Context, location string) (n int64, err error) {
+func (u *UploadService) GetOffset(ctx context.Context, location string) (n int64, err error) {
 	u.log(fmt.Sprintf("Getting upload offset %q", location))
-	ctx, cancel := context.WithTimeout(ctx, u.timeout)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodHead, location, nil)
+	req, err := u.client.NewRequest(ctx, http.MethodHead, location, nil)
 	if err != nil {
 		return
 	}
 
-	req.Header.Set("Authorization", "token "+u.token)
-	resp, err := u.client.Do(req)
+	resp, err := u.client.client.Do(req)
 	if err != nil {
 		return
 	}
@@ -140,17 +121,14 @@ func (u *Uploader) GetOffset(ctx context.Context, location string) (n int64, err
 }
 
 // TerminateUpload removes incomplete file from the server.
-func (u *Uploader) TerminateUpload(ctx context.Context, location string) (err error) {
+func (u *UploadService) TerminateUpload(ctx context.Context, location string) (err error) {
 	u.log(fmt.Sprintf("Terminating upload %q", location))
-	ctx, cancel := context.WithTimeout(ctx, u.timeout)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, location, nil)
+	req, err := u.client.NewRequest(ctx, http.MethodDelete, location, nil)
 	if err != nil {
 		return
 	}
 
-	req.Header.Set("Authorization", "token "+u.token)
-	resp, err := u.client.Do(req)
+	resp, err := u.client.client.Do(req)
 	if err != nil {
 		return
 	}

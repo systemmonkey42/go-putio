@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 const (
@@ -14,6 +15,7 @@ const (
 	defaultMediaType = "application/json"
 	defaultBaseURL   = "https://api.put.io"
 	defaultUploadURL = "https://upload.put.io"
+	defaultTusURL    = "https://upload.put.io/files/"
 )
 
 // Client manages communication with Put.io v2 API.
@@ -23,9 +25,6 @@ type Client struct {
 
 	// Base URL for API requests
 	BaseURL *url.URL
-
-	// base url for upload requests
-	uploadURL *url.URL
 
 	// User agent for client
 	UserAgent string
@@ -44,6 +43,7 @@ type Client struct {
 	Friends   *FriendsService
 	Events    *EventsService
 	Config    *ConfigService
+	Upload    *UploadService
 }
 
 // NewClient returns a new Put.io API client, using the htttpClient, which must
@@ -55,11 +55,9 @@ func NewClient(httpClient *http.Client) *Client {
 	}
 
 	baseURL, _ := url.Parse(defaultBaseURL)
-	uploadURL, _ := url.Parse(defaultUploadURL)
 	c := &Client{
 		client:       httpClient,
 		BaseURL:      baseURL,
-		uploadURL:    uploadURL,
 		UserAgent:    defaultUserAgent,
 		ExtraHeaders: make(http.Header),
 	}
@@ -71,6 +69,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Friends = &FriendsService{client: c}
 	c.Events = &EventsService{client: c}
 	c.Config = &ConfigService{client: c}
+	c.Upload = &UploadService{client: c}
 
 	return c
 }
@@ -98,13 +97,20 @@ func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.
 		return nil, err
 	}
 
+	// Workaround for upload endpoints. Upload server is different than API server.
 	var u *url.URL
-	// XXX: workaroud for upload endpoint. upload method has a different base url,
-	// so we've a special case for testing purposes.
-	if relURL == "/v2/files/upload" {
-		u = c.uploadURL.ResolveReference(rel)
-	} else {
+	switch {
+	case relURL == "$upload$":
+		u, err = url.Parse(defaultUploadURL)
+	case relURL == "$upload-tus$":
+		u, err = url.Parse(defaultTusURL)
+	case strings.HasPrefix(relURL, "http://") || strings.HasPrefix(relURL, "https://"):
+		u, err = url.Parse(relURL)
+	default:
 		u = c.BaseURL.ResolveReference(rel)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest(method, u.String(), body)
