@@ -8,6 +8,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+)
+
+const (
+	DefaultClientTimeout = 30 * time.Second
 )
 
 const (
@@ -35,6 +40,9 @@ type Client struct {
 	// ExtraHeaders are passed to the API server on every request.
 	ExtraHeaders http.Header
 
+	// Timeout for HTTP requests. Zero means no timeout.
+	Timeout time.Duration
+
 	// Services used for communicating with the API
 	Account   *AccountService
 	Files     *FilesService
@@ -60,6 +68,7 @@ func NewClient(httpClient *http.Client) *Client {
 		BaseURL:      baseURL,
 		UserAgent:    defaultUserAgent,
 		ExtraHeaders: make(http.Header),
+		Timeout:      DefaultClientTimeout,
 	}
 
 	c.Account = &AccountService{client: c}
@@ -101,27 +110,21 @@ func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.
 	var u *url.URL
 	switch {
 	case relURL == "$upload$":
-		u, err = url.Parse(defaultUploadURL)
+		u, _ = url.Parse(defaultUploadURL)
 	case relURL == "$upload-tus$":
-		u, err = url.Parse(defaultTusURL)
+		u, _ = url.Parse(defaultTusURL)
 	case strings.HasPrefix(relURL, "http://") || strings.HasPrefix(relURL, "https://"):
-		u, err = url.Parse(relURL)
+		u = rel
 	default:
 		u = c.BaseURL.ResolveReference(rel)
 	}
+
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), body)
 	if err != nil {
 		return nil, err
 	}
-
-	req, err := http.NewRequest(method, u.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req = req.WithContext(ctx)
 	req.Header.Set("Accept", defaultMediaType)
 	req.Header.Set("User-Agent", c.UserAgent)
-
 	if c.Host != "" {
 		req.Host = c.Host
 	}
@@ -142,6 +145,12 @@ func (c *Client) NewRequest(ctx context.Context, method, relURL string, body io.
 // v is nil. If v is nil, response body is not closed and the body can be used
 // for streaming.
 func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
+	if c.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(r.Context(), c.Timeout)
+		defer cancel()
+		r = r.WithContext(ctx)
+	}
+
 	resp, err := c.client.Do(r)
 	if err != nil {
 		return nil, err

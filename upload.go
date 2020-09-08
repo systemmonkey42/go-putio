@@ -59,7 +59,7 @@ func (u *UploadService) CreateUpload(ctx context.Context, filename string, paren
 // SendFile sends the contents of the file to put.io.
 // In case of an transmission error, you can resume upload but you have to get the correct offset from server by
 // calling GetOffset and must seek to the new offset on io.Reader.
-func (u *UploadService) SendFile(ctx context.Context, r io.Reader, location string, offset int64, timeout time.Duration) (fileID int64, crc32 string, err error) {
+func (u *UploadService) SendFile(ctx context.Context, r io.Reader, location string, offset int64) (fileID int64, crc32 string, err error) {
 	u.log(fmt.Sprintf("Sending file %q offset=%d", location, offset))
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -67,11 +67,20 @@ func (u *UploadService) SendFile(ctx context.Context, r io.Reader, location stri
 
 	// Stop upload if speed is too slow.
 	// Wrap reader so each read call resets the timer that cancels the request on certain duration.
-	r = &timerResetReader{r: r, timer: time.AfterFunc(timeout, cancel), timeout: timeout}
+	if u.client.Timeout > 0 {
+		r = &timerResetReader{r: r, timer: time.AfterFunc(u.client.Timeout, cancel), timeout: u.client.Timeout}
+	}
 
 	req, err := u.client.NewRequest(ctx, http.MethodPatch, location, r)
 	if err != nil {
 		return
+	}
+
+	// putio.Client.NewRequests add another context for handling Client.Timeout. Replace it with original context.
+	// Request must not be cancelled on timeout because sending upload body takes a long time.
+	// We will be using timerResetReader for tracking uploaded bytes and doint cancellation there.
+	if u.client.Timeout > 0 {
+		req = req.WithContext(ctx)
 	}
 
 	req.Header.Set("content-type", "application/offset+octet-stream")
