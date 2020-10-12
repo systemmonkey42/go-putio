@@ -26,7 +26,7 @@ func (u *UploadService) log(message string) {
 }
 
 // CreateUpload is used for beginning new upload. Use returned location in SendFile function.
-func (u *UploadService) CreateUpload(ctx context.Context, filename string, parentID, length int64) (location string, err error) {
+func (u *UploadService) CreateUpload(ctx context.Context, filename string, parentID, length int64, overwrite bool) (location string, err error) {
 	u.log(fmt.Sprintf("Creating upload %q at parent=%d", filename, parentID))
 	req, err := u.client.NewRequest(ctx, http.MethodPost, "$upload-tus$", nil)
 	if err != nil {
@@ -36,6 +36,7 @@ func (u *UploadService) CreateUpload(ctx context.Context, filename string, paren
 		"name":       filename,
 		"parent_id":  strconv.FormatInt(parentID, 10),
 		"no-torrent": "true",
+		"overwrite":  strconv.FormatBool(overwrite),
 	}
 	req.Header.Set("Content-Length", "0")
 	req.Header.Set("Upload-Length", strconv.FormatInt(length, 10))
