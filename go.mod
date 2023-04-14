@@ -1,6 +1,6 @@
-module github.com/putdotio/go-putio
+module github.com/systemmonkey42/go-putio
 
-go 1.19
+go 1.18
 
 require golang.org/x/oauth2 v0.2.0
 
