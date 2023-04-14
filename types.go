@@ -1,6 +1,9 @@
 package putio
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // File types.
 const (
@@ -17,21 +20,21 @@ const (
 
 // File represents a Put.io file.
 type File struct {
-	ID                int64  `json:"id"`
-	Name              string `json:"name"`
-	Size              int64  `json:"size"`
-	ContentType       string `json:"content_type"`
-	CreatedAt         *Time  `json:"created_at"`
-	UpdatedAt         *Time  `json:"updated_at"`
-	FirstAccessedAt   *Time  `json:"first_accessed_at"`
-	ParentID          int64  `json:"parent_id"`
-	Screenshot        string `json:"screenshot"`
-	OpensubtitlesHash string `json:"opensubtitles_hash"`
-	IsMP4Available    bool   `json:"is_mp4_available"`
-	Icon              string `json:"icon"`
-	CRC32             string `json:"crc32"`
-	IsShared          bool   `json:"is_shared"`
-	FileType          string `json:"file_type"`
+	ID                int64      `json:"id"`
+	Name              string     `json:"name"`
+	Size              int64      `json:"size"`
+	ContentType       string     `json:"content_type"`
+	CreatedAt         *time.Time `json:"created_at"`
+	UpdatedAt         *time.Time `json:"updated_at"`
+	FirstAccessedAt   *time.Time `json:"first_accessed_at"`
+	ParentID          int64      `json:"parent_id"`
+	Screenshot        string     `json:"screenshot"`
+	OpensubtitlesHash string     `json:"opensubtitles_hash"`
+	IsMP4Available    bool       `json:"is_mp4_available"`
+	Icon              string     `json:"icon"`
+	CRC32             string     `json:"crc32"`
+	IsShared          bool       `json:"is_shared"`
+	FileType          string     `json:"file_type"`
 }
 
 func (f *File) String() string {
@@ -112,6 +115,7 @@ type AccountInfo struct {
 	} `json:"disk"`
 	HasVoucher                bool     `json:"has_voucher"`
 	Mail                      string   `json:"mail"`
+	MonthlyBandwidthUsage     int64    `json:"monthly_bandwidth_usage"`
 	PlanExpirationDate        string   `json:"plan_expiration_date"`
 	Settings                  Settings `json:"settings"`
 	SimultaneousDownloadLimit int      `json:"simultaneous_download_limit"`
