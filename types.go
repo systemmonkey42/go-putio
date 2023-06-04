@@ -2,6 +2,7 @@ package putio
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -18,23 +19,33 @@ const (
 	FileTypeSWF     string = "SWF"
 )
 
+type PutTime struct {
+	time.Time
+}
+
+func (p *PutTime) UnmarshalJSON(b []byte) (err error) {
+	s := strings.Trim(string(b), "\"")
+	p.Time, err = time.Parse("2006-01-02T15:04:05", s)
+	return
+}
+
 // File represents a Put.io file.
 type File struct {
-	ID                int64      `json:"id"`
-	Name              string     `json:"name"`
-	Size              int64      `json:"size"`
-	ContentType       string     `json:"content_type"`
-	CreatedAt         *time.Time `json:"created_at"`
-	UpdatedAt         *time.Time `json:"updated_at"`
-	FirstAccessedAt   *time.Time `json:"first_accessed_at"`
-	ParentID          int64      `json:"parent_id"`
-	Screenshot        string     `json:"screenshot"`
-	OpensubtitlesHash string     `json:"opensubtitles_hash"`
-	IsMP4Available    bool       `json:"is_mp4_available"`
-	Icon              string     `json:"icon"`
-	CRC32             string     `json:"crc32"`
-	IsShared          bool       `json:"is_shared"`
-	FileType          string     `json:"file_type"`
+	ID                int64    `json:"id"`
+	Name              string   `json:"name"`
+	Size              int64    `json:"size"`
+	ContentType       string   `json:"content_type"`
+	CreatedAt         *PutTime `json:"created_at"`
+	UpdatedAt         *PutTime `json:"updated_at"`
+	FirstAccessedAt   *PutTime `json:"first_accessed_at"`
+	ParentID          int64    `json:"parent_id"`
+	Screenshot        string   `json:"screenshot"`
+	OpensubtitlesHash string   `json:"opensubtitles_hash"`
+	IsMP4Available    bool     `json:"is_mp4_available"`
+	Icon              string   `json:"icon"`
+	CRC32             string   `json:"crc32"`
+	IsShared          bool     `json:"is_shared"`
+	FileType          string   `json:"file_type"`
 }
 
 func (f *File) String() string {
@@ -61,45 +72,45 @@ type Search struct {
 
 // Transfer represents a Put.io transfer state.
 type Transfer struct {
-	Availability   int    `json:"availability"`
-	CallbackURL    string `json:"callback_url"`
-	CreatedAt      *Time  `json:"created_at"`
-	CreatedTorrent bool   `json:"created_torrent"`
-	ClientIP       string `json:"client_ip"`
+	Availability   int      `json:"availability"`
+	CallbackURL    string   `json:"callback_url"`
+	CreatedAt      *PutTime `json:"created_at"`
+	CreatedTorrent bool     `json:"created_torrent"`
+	ClientIP       string   `json:"client_ip"`
 
 	// nolint:godox
 	// FIXME: API returns either string or float non-deterministically.
 	// CurrentRatio       float32 `json:"current_ratio"`
 
-	DownloadSpeed      int    `json:"down_speed"`
-	Downloaded         int64  `json:"downloaded"`
-	DownloadID         int64  `json:"download_id"`
-	ErrorMessage       string `json:"error_message"`
-	EstimatedTime      int64  `json:"estimated_time"`
-	Extract            bool   `json:"extract"`
-	FileID             int64  `json:"file_id"`
-	FinishedAt         *Time  `json:"finished_at"`
-	ID                 int64  `json:"id"`
-	IsPrivate          bool   `json:"is_private"`
-	MagnetURI          string `json:"magneturi"`
-	Name               string `json:"name"`
-	PeersConnected     int    `json:"peers_connected"`
-	PeersGettingFromUs int    `json:"peers_getting_from_us"`
-	PeersSendingToUs   int    `json:"peers_sending_to_us"`
-	PercentDone        int    `json:"percent_done"`
-	SaveParentID       int64  `json:"save_parent_id"`
-	SecondsSeeding     int    `json:"seconds_seeding"`
-	Size               int    `json:"size"`
-	Source             string `json:"source"`
-	Status             string `json:"status"`
-	StatusMessage      string `json:"status_message"`
-	SubscriptionID     int    `json:"subscription_id"`
-	TorrentLink        string `json:"torrent_link"`
-	TrackerMessage     string `json:"tracker_message"`
-	Trackers           string `json:"tracker"`
-	Type               string `json:"type"`
-	UploadSpeed        int    `json:"up_speed"`
-	Uploaded           int64  `json:"uploaded"`
+	DownloadSpeed      int      `json:"down_speed"`
+	Downloaded         int64    `json:"downloaded"`
+	DownloadID         int64    `json:"download_id"`
+	ErrorMessage       string   `json:"error_message"`
+	EstimatedTime      int64    `json:"estimated_time"`
+	Extract            bool     `json:"extract"`
+	FileID             int64    `json:"file_id"`
+	FinishedAt         *PutTime `json:"finished_at"`
+	ID                 int64    `json:"id"`
+	IsPrivate          bool     `json:"is_private"`
+	MagnetURI          string   `json:"magneturi"`
+	Name               string   `json:"name"`
+	PeersConnected     int      `json:"peers_connected"`
+	PeersGettingFromUs int      `json:"peers_getting_from_us"`
+	PeersSendingToUs   int      `json:"peers_sending_to_us"`
+	PercentDone        int      `json:"percent_done"`
+	SaveParentID       int64    `json:"save_parent_id"`
+	SecondsSeeding     int      `json:"seconds_seeding"`
+	Size               int      `json:"size"`
+	Source             string   `json:"source"`
+	Status             string   `json:"status"`
+	StatusMessage      string   `json:"status_message"`
+	SubscriptionID     int      `json:"subscription_id"`
+	TorrentLink        string   `json:"torrent_link"`
+	TrackerMessage     string   `json:"tracker_message"`
+	Trackers           string   `json:"tracker"`
+	Type               string   `json:"type"`
+	UploadSpeed        int      `json:"up_speed"`
+	Uploaded           int64    `json:"uploaded"`
 }
 
 // AccountInfo represents user's account information.
@@ -150,8 +161,8 @@ type Friend struct {
 
 // Zip represents Put.io zip file.
 type Zip struct {
-	ID        int64 `json:"id"`
-	CreatedAt *Time `json:"created_at"`
+	ID        int64    `json:"id"`
+	CreatedAt *PutTime `json:"created_at"`
 
 	Size   int64  `json:"size"`
 	Status string `json:"status"`
@@ -168,13 +179,13 @@ type Subtitle struct {
 
 // Event represents a Put.io event. It could be a transfer or a shared file.
 type Event struct {
-	ID           int64  `json:"id"`
-	FileID       int64  `json:"file_id"`
-	Source       string `json:"source"`
-	Type         string `json:"type"`
-	TransferName string `json:"transfer_name"`
-	TransferSize int64  `json:"transfer_size"`
-	CreatedAt    *Time  `json:"created_at"`
+	ID           int64    `json:"id"`
+	FileID       int64    `json:"file_id"`
+	Source       string   `json:"source"`
+	Type         string   `json:"type"`
+	TransferName string   `json:"transfer_name"`
+	TransferSize int64    `json:"transfer_size"`
+	CreatedAt    *PutTime `json:"created_at"`
 }
 
 type share struct {

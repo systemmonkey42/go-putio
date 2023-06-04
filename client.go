@@ -171,9 +171,7 @@ func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
 	}
 
 	// close the body for all cases from here
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(v)
 	if err != nil {
